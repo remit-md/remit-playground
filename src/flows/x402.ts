@@ -15,7 +15,7 @@ const NETWORK = "eip155:84532";
 
 // EIP-3009 domain — must match the server's USDC contract
 // (name="USD Coin", version="2", per the x402_verify.rs implementation)
-const USDC_ADDRESS = "0x49F4a12137124D86eC79591B789c96AebE279Ddc"; // Base Sepolia testnet USDC
+const USDC_ADDRESS = "0xb6302F6aF30bA13d51CEd27ACF0279AD3c4e4497"; // Base Sepolia testnet USDC
 
 const EIP3009_DOMAIN = {
   name: "USD Coin",
