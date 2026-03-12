@@ -128,7 +128,7 @@ export const x402Flow: Flow = {
     const settleParsed = await settleRes.json().catch(() => ({ status: settleRes.status }));
 
     if (settleRes.ok) {
-      yield { label: "Server ← Settlement confirmed on-chain", side: "both", response: settleParsed };
+      yield { label: "Server ← Settlement confirmed on-chain", side: "both", response: settleParsed, balanceDelta: { agent: -0.01, provider: 0.01 } };
       yield { label: "Agent → retries with PAYMENT-SIGNATURE → 200 ✓", side: "agent", response: { status: 200, data: "Resource served" } };
     } else {
       yield {

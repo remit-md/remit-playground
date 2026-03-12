@@ -29,6 +29,13 @@ let resetBtn: HTMLButtonElement;
 let stepQueue: StepResult[] = [];
 let stepIndex = 0;
 
+// Simulated balance tracking (dollars).
+// The on-chain balance only changes for x402 (EIP-3009). All other flows use the
+// server relayer's wallet, so the agent/provider on-chain balances stay flat.
+// We track simulated balances so the header bar shows realistic money movement.
+let agentSimBal = 0;
+let providerSimBal = 0;
+
 // ── DOM Helpers ───────────────────────────────────────────────────────────────
 
 function el(tag: string, cls: string, text?: string): HTMLElement {
@@ -47,16 +54,36 @@ function btn(label: string, cls: string): HTMLButtonElement {
 
 // ── Balance refresh ───────────────────────────────────────────────────────────
 
+function formatBal(n: number): string {
+  return `$${n.toFixed(2)}`;
+}
+
 async function refreshBalances(): Promise<void> {
   try {
     const [ab, pb] = await Promise.all([
       getBalance(agentWallet.address, agentWallet),
       getBalance(providerWallet.address, agentWallet),
     ]);
-    agentBalanceEl.textContent = `$${ab}`;
-    providerBalanceEl.textContent = `$${pb}`;
+    agentSimBal = parseFloat(ab) || 0;
+    providerSimBal = parseFloat(pb) || 0;
+    agentBalanceEl.textContent = formatBal(agentSimBal);
+    providerBalanceEl.textContent = formatBal(providerSimBal);
   } catch {
     // ignore
+  }
+}
+
+/** Apply a step's balance delta to the simulated totals and update the header. */
+function applyDelta(step: StepResult): void {
+  const d = step.balanceDelta;
+  if (!d) return;
+  if (d.agent) {
+    agentSimBal = +(agentSimBal + d.agent).toFixed(6);
+    agentBalanceEl.textContent = formatBal(agentSimBal);
+  }
+  if (d.provider) {
+    providerSimBal = +(providerSimBal + d.provider).toFixed(6);
+    providerBalanceEl.textContent = formatBal(providerSimBal);
   }
 }
 
@@ -130,6 +157,7 @@ async function runFullFlow(): Promise<void> {
     for await (const step of activeFlow.run(ctx)) {
       agentPanel.addStep(step, true);
       providerPanel.addStep(step, true);
+      applyDelta(step);
       await new Promise((r) => setTimeout(r, 600));
       agentPanel.addStep(step, false);
       providerPanel.addStep(step, false);
@@ -145,7 +173,9 @@ async function runFullFlow(): Promise<void> {
   }
 
   setRunning(false);
-  void refreshBalances();
+  // Don't refresh from on-chain here — simulated deltas are more accurate
+  // than the on-chain balance (relayer model means agent's USDC doesn't move).
+  // Balances reset to on-chain values on init() and resetFlow().
 }
 
 async function collectAllSteps(): Promise<StepResult[]> {
@@ -181,12 +211,12 @@ async function startStepMode(): Promise<void> {
 
 function advanceStep(): void {
   if (stepIndex >= stepQueue.length) {
-    void refreshBalances();
     return;
   }
   const step = stepQueue[stepIndex++];
   agentPanel.addStep(step);
   providerPanel.addStep(step);
+  applyDelta(step);
   stepBtn.textContent = stepIndex >= stepQueue.length ? "⏭ Done" : "⏭ Step";
 }
 

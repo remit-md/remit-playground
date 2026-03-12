@@ -26,7 +26,7 @@ export const bountyFlow: Flow = {
       },
       ctx.agent,
     );
-    yield { label: "Bounty posted — USDC locked", side: "both", response: bounty };
+    yield { label: "Bounty posted — USDC locked", side: "both", response: bounty, balanceDelta: { agent: -3.0 } };
 
     // Step 2: Provider submits evidence
     const submitReq = { evidence_hash: evidenceHash };
@@ -46,7 +46,7 @@ export const bountyFlow: Flow = {
       awardReq,
       ctx.agent,
     );
-    yield { label: "Provider ← Bounty awarded", side: "both", response: awardTx };
+    yield { label: "Provider ← Bounty awarded", side: "both", response: awardTx, balanceDelta: { provider: 2.97 } };
 
     const finalBounty = await apiGet<unknown>(`/bounties/${bounty.id}`, ctx.agent);
     yield { label: "Bounty complete", side: "both", response: finalBounty };

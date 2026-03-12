@@ -26,7 +26,7 @@ export const directFlow: Flow = {
       ctx.agent,
     );
 
-    yield { label: "Server → 201 Transaction confirmed", side: "agent", response: tx };
+    yield { label: "Server → 201 Transaction confirmed", side: "agent", response: tx, balanceDelta: { agent: -1.0, provider: 0.99 } };
 
     yield { label: "Provider checks events", side: "provider" };
     const events = await apiGet<unknown[]>(`/events?wallet=${ctx.provider.address}&limit=5`, ctx.provider);

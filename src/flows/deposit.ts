@@ -17,7 +17,7 @@ export const depositFlow: Flow = {
       { chain: "base-sepolia", provider: ctx.provider.address, amount: 1.5, expiry },
       ctx.agent,
     );
-    yield { label: "Deposit locked on-chain", side: "both", response: deposit };
+    yield { label: "Deposit locked on-chain", side: "both", response: deposit, balanceDelta: { agent: -1.5 } };
 
     yield { label: "Provider reviews deposit", side: "provider" };
     const fetched = await apiGet<unknown>(`/deposits/${deposit.id}`, ctx.provider);
@@ -29,7 +29,7 @@ export const depositFlow: Flow = {
       {},
       ctx.provider,
     );
-    yield { label: "Deposit returned to agent", side: "both", response: returnTx };
+    yield { label: "Deposit returned to agent", side: "both", response: returnTx, balanceDelta: { agent: 1.5 } };
 
     const finalDeposit = await apiGet<unknown>(`/deposits/${deposit.id}`, ctx.agent);
     yield { label: "Deposit final state", side: "both", response: finalDeposit };

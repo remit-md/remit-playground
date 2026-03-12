@@ -6,6 +6,8 @@ export interface StepResult {
   request?: unknown;
   response?: unknown;
   error?: unknown;
+  /** Simulated balance change (dollars). Negative = outflow. */
+  balanceDelta?: { agent?: number; provider?: number };
 }
 
 export interface FlowContext {

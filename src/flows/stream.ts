@@ -19,7 +19,7 @@ export const streamFlow: Flow = {
       { chain: "base-sepolia", payee: ctx.provider.address, rate_per_second: RATE, max_total: MAX_TOTAL },
       ctx.agent,
     );
-    yield { label: `Stream opened @ $${RATE}/sec`, side: "both", response: stream };
+    yield { label: `Stream opened @ $${RATE}/sec`, side: "both", response: stream, balanceDelta: { agent: -MAX_TOTAL } };
 
     yield { label: "⏱ Funds accruing… (3s simulated)", side: "both" };
     await new Promise((r) => setTimeout(r, 3000));
@@ -31,11 +31,13 @@ export const streamFlow: Flow = {
       { amount: withdrawAmount },
       ctx.provider,
     );
-    yield { label: "Provider ← Accrued USDC withdrawn", side: "provider", response: withdrawTx };
+    yield { label: "Provider ← Accrued USDC withdrawn", side: "provider", response: withdrawTx, balanceDelta: { provider: withdrawAmount } };
 
     yield { label: "Agent → POST /streams/:id/close", side: "agent" };
     const closeTx = await apiPost<{ id: string }>(`/streams/${stream.id}/close`, {}, ctx.agent);
-    yield { label: "Stream closed — remainder returned", side: "both", response: closeTx };
+    const accrued = withdrawAmount;
+    const remainder = +(MAX_TOTAL - accrued).toFixed(6);
+    yield { label: "Stream closed — remainder returned", side: "both", response: closeTx, balanceDelta: { agent: remainder } };
 
     const finalStream = await apiGet<unknown>(`/streams/${stream.id}`, ctx.agent);
     yield { label: "Stream final state", side: "both", response: finalStream };

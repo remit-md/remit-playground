@@ -73,7 +73,7 @@ export const tabFlow: Flow = {
       { final_amount: cumulative, provider_sig: providerSig },
       ctx.agent,
     );
-    yield { label: "Tab closed — USDC settled on-chain", side: "both", response: closeTx };
+    yield { label: "Tab closed — USDC settled on-chain", side: "both", response: closeTx, balanceDelta: { agent: -cumulative, provider: +(cumulative * 0.99).toFixed(2) } };
 
     const finalTab = await apiGet<unknown>(`/tabs/${tab.id}`, ctx.agent);
     yield { label: "Tab final state", side: "both", response: finalTab };

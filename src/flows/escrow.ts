@@ -38,7 +38,7 @@ export const escrowFlow: Flow = {
     // Step 2: Fund escrow
     yield { label: "Agent → POST /escrows (fund)", side: "agent", request: { invoice_id: invoiceId } };
     const escrow = await apiPost<{ id: string; status: string }>("/escrows", { invoice_id: invoiceId }, ctx.agent);
-    yield { label: "Agent ← Escrow funded on-chain", side: "agent", response: escrow };
+    yield { label: "Agent ← Escrow funded on-chain", side: "agent", response: escrow, balanceDelta: { agent: -2.0 } };
 
     // Step 3: Provider claims start
     yield { label: "Provider → POST /escrows/:id/claim-start", side: "provider" };
@@ -48,7 +48,7 @@ export const escrowFlow: Flow = {
     // Step 4: Agent releases escrow
     yield { label: "Agent → POST /escrows/:id/release (work done)", side: "agent" };
     const releaseTx = await apiPost<{ tx_hash: string }>(`/escrows/${invoiceId}/release`, {}, ctx.agent);
-    yield { label: "Provider ← Funds released", side: "both", response: releaseTx };
+    yield { label: "Provider ← Funds released", side: "both", response: releaseTx, balanceDelta: { provider: 1.98 } };
 
     const finalEscrow = await apiGet<unknown>(`/escrows/${invoiceId}`, ctx.agent);
     yield { label: "Escrow settled", side: "both", response: finalEscrow };
