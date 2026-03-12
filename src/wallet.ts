@@ -45,19 +45,12 @@ export function loadOrCreate(storageKey: string): PlaygroundWallet {
   return w;
 }
 
-export interface AuthHeaders {
-  "X-Remit-Agent": string;
-  "X-Remit-Nonce": string;
-  "X-Remit-Timestamp": string;
-  "X-Remit-Signature": string;
-}
-
 /** Sign an API request using EIP-712, returning ready-to-use auth headers. */
 export async function signRequest(
   w: PlaygroundWallet,
   method: string,
   path: string,
-): Promise<AuthHeaders> {
+): Promise<Record<string, string>> {
   const signer = new ethers.Wallet(w.privateKey);
   const nonce = ethers.hexlify(ethers.randomBytes(32));
   const timestamp = Math.floor(Date.now() / 1000);
