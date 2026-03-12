@@ -9,6 +9,7 @@ export const escrowFlow: Flow = {
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
     const invoiceId = ethers.hexlify(ethers.randomBytes(16)).slice(2);
+    const nonce = ethers.hexlify(ethers.randomBytes(16));
 
     // Step 1: Create invoice
     const invoiceReq = {
@@ -17,7 +18,7 @@ export const escrowFlow: Flow = {
       to: ctx.provider.address,
       amount: 2.0,
       type: "escrow",
-      memo: "playground escrow",
+      task: "playground escrow",
     };
     yield { label: "Agent → POST /invoices (create)", side: "agent", request: invoiceReq };
 
@@ -29,25 +30,26 @@ export const escrowFlow: Flow = {
       amount: 2.0,
       type: "escrow",
       task: "playground escrow",
+      nonce,
+      signature: "0x",
     }, ctx.agent);
     yield { label: "Server → 201 Invoice created", side: "agent", response: { invoiceId } };
 
     // Step 2: Fund escrow
     yield { label: "Agent → POST /escrows (fund)", side: "agent", request: { invoice_id: invoiceId } };
-    const escrow = await apiPost<{ invoiceId: string; status: string }>("/escrows", { invoice_id: invoiceId }, ctx.agent);
+    const escrow = await apiPost<{ id: string; status: string }>("/escrows", { invoice_id: invoiceId }, ctx.agent);
     yield { label: "Agent ← Escrow funded on-chain", side: "agent", response: escrow };
 
     // Step 3: Provider claims start
     yield { label: "Provider → POST /escrows/:id/claim-start", side: "provider" };
-    const claimTx = await apiPost<{ txHash: string }>(`/escrows/${invoiceId}/claim-start`, {}, ctx.provider);
+    const claimTx = await apiPost<{ tx_hash: string }>(`/escrows/${invoiceId}/claim-start`, {}, ctx.provider);
     yield { label: "Provider ← Work started (tx confirmed)", side: "provider", response: claimTx };
 
     // Step 4: Agent releases escrow
     yield { label: "Agent → POST /escrows/:id/release (work done)", side: "agent" };
-    const releaseTx = await apiPost<{ txHash: string }>(`/escrows/${invoiceId}/release`, {}, ctx.agent);
+    const releaseTx = await apiPost<{ tx_hash: string }>(`/escrows/${invoiceId}/release`, {}, ctx.agent);
     yield { label: "Provider ← Funds released", side: "both", response: releaseTx };
 
-    // Step 5: Get final escrow state
     const finalEscrow = await apiGet<unknown>(`/escrows/${invoiceId}`, ctx.agent);
     yield { label: "Escrow settled", side: "both", response: finalEscrow };
   },
