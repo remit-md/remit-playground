@@ -10,7 +10,7 @@
 
 import { apiPost, apiGetPublic, BASE_URL } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
-import { signAuth } from "../wallet.js";
+import { signRequest } from "../wallet.js";
 import { ethers } from "ethers";
 
 const CHAIN_ID = 84532;
@@ -101,16 +101,10 @@ export const x402Flow: Flow = {
     yield { label: "Agent → POST /x402/settle", side: "agent", request: { ...settleReq, signature: signature.slice(0, 20) + "…" } };
 
     // Sign the settle request with EIP-712 auth
-    const auth = await signAuth(ctx.agent);
+    const authHeaders = await signRequest(ctx.agent, "POST", "/api/v0/x402/settle");
     const settleRes = await fetch(`${BASE_URL}/x402/settle`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Wallet": auth.wallet,
-        "X-Nonce": auth.nonce,
-        "X-Timestamp": String(auth.timestamp),
-        "X-Signature": auth.signature,
-      },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(settleReq),
     });
 

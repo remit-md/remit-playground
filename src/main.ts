@@ -4,7 +4,7 @@
  */
 
 import { loadOrCreate, type PlaygroundWallet } from "./wallet.js";
-import { ensureRegistered, requestFaucet, getBalance, BASE_URL } from "./api.js";
+import { requestFaucet, getBalance, BASE_URL } from "./api.js";
 import { AgentPanel } from "./panels/agent.js";
 import { ProviderPanel } from "./panels/provider.js";
 import { ALL_FLOWS } from "./flows/index.js";
@@ -82,13 +82,6 @@ async function checkConnectivity(): Promise<void> {
 async function init(): Promise<void> {
   agentWallet = loadOrCreate("remit-playground-agent");
   providerWallet = loadOrCreate("remit-playground-provider");
-
-  setStatus("Registering wallets…");
-  try {
-    await Promise.all([ensureRegistered(agentWallet), ensureRegistered(providerWallet)]);
-  } catch (e) {
-    console.warn("Registration failed:", e);
-  }
 
   setStatus("Requesting testnet funds…");
   try {
