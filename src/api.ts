@@ -28,7 +28,8 @@ export async function apiPost<T>(path: string, body: unknown, wallet: Playground
 }
 
 export async function apiGet<T>(path: string, wallet: PlaygroundWallet): Promise<T> {
-  const authHeaders = await signRequest(wallet, "GET", `/api/v0${path}`);
+  const pathOnly = path.split("?")[0];
+  const authHeaders = await signRequest(wallet, "GET", `/api/v0${pathOnly}`);
   const res = await fetch(`${BASE_URL}${path}`, { headers: authHeaders });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new ApiError(res.status, data);
