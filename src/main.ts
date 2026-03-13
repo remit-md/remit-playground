@@ -107,19 +107,29 @@ async function checkConnectivity(): Promise<void> {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
+const FAUCET_THRESHOLD = 1; // Only auto-faucet if balance < $1
+
 async function init(): Promise<void> {
   agentWallet = loadOrCreate("remit-playground-agent");
   providerWallet = loadOrCreate("remit-playground-provider");
 
-  setStatus("Requesting testnet funds…");
-  try {
-    await Promise.all([requestFaucet(agentWallet.address), requestFaucet(providerWallet.address)]);
-  } catch (e) {
-    console.warn("Faucet failed:", e);
-  }
-
-  clearStatus();
+  // Fetch real balances + connectivity first
   await Promise.all([checkConnectivity(), refreshBalances()]);
+
+  // Only faucet if either wallet is running low
+  if (agentSimBal < FAUCET_THRESHOLD || providerSimBal < FAUCET_THRESHOLD) {
+    setStatus("Requesting testnet funds…");
+    try {
+      const faucetCalls: Promise<void>[] = [];
+      if (agentSimBal < FAUCET_THRESHOLD) faucetCalls.push(requestFaucet(agentWallet.address));
+      if (providerSimBal < FAUCET_THRESHOLD) faucetCalls.push(requestFaucet(providerWallet.address));
+      await Promise.all(faucetCalls);
+    } catch (e) {
+      console.warn("Faucet failed:", e);
+    }
+    clearStatus();
+    await refreshBalances();
+  }
 }
 
 function setStatus(msg: string): void {
@@ -229,13 +239,7 @@ async function resetFlow(): Promise<void> {
   stepIndex = 0;
   runBtn.textContent = "▶ Run";
   stepBtn.textContent = "⏭ Step";
-  setStatus("Re-funding wallets…");
-  try {
-    await Promise.all([requestFaucet(agentWallet.address), requestFaucet(providerWallet.address)]);
-  } catch {
-    // ignore 429
-  }
-  clearStatus();
+  // Snap simulated balances back to real on-chain values
   await refreshBalances();
   setRunning(false);
 }
