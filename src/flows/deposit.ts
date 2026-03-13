@@ -1,4 +1,4 @@
-import { apiPost, apiGet } from "../api.js";
+import { apiPost, apiGet, pollEvents } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 
 export const depositFlow: Flow = {
@@ -32,9 +32,9 @@ export const depositFlow: Flow = {
     );
     yield { label: "Deposit returned to agent", side: "both", response: returnTx, balanceDelta: { agent: 1.5 } };
 
-    yield { label: "Provider → GET /events (poll)", side: "provider" };
-    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
+    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
+    const events = await pollEvents(ctx.provider, startTs);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
 
     const finalDeposit = await apiGet<unknown>(`/deposits/${deposit.id}`, ctx.agent);
     yield { label: "Deposit final state", side: "both", response: finalDeposit };

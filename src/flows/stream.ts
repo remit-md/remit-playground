@@ -1,4 +1,4 @@
-import { apiPost, apiGet } from "../api.js";
+import { apiPost, apiGet, pollEvents } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 
 const RATE = 0.001;
@@ -40,9 +40,9 @@ export const streamFlow: Flow = {
     const remainder = +(MAX_TOTAL - accrued).toFixed(6);
     yield { label: "Stream closed — remainder returned", side: "both", response: closeTx, balanceDelta: { agent: remainder } };
 
-    yield { label: "Provider → GET /events (poll)", side: "provider" };
-    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
+    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
+    const events = await pollEvents(ctx.provider, startTs);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
 
     const finalStream = await apiGet<unknown>(`/streams/${stream.id}`, ctx.agent);
     yield { label: "Stream final state", side: "both", response: finalStream };

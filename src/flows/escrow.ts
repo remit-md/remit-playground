@@ -1,4 +1,4 @@
-import { apiPost, apiGet } from "../api.js";
+import { apiPost, apiGet, pollEvents } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 import { ethers } from "ethers";
 
@@ -51,9 +51,9 @@ export const escrowFlow: Flow = {
     const releaseTx = await apiPost<{ tx_hash: string }>(`/escrows/${invoiceId}/release`, {}, ctx.agent);
     yield { label: "Provider ← Funds released", side: "both", response: releaseTx, balanceDelta: { provider: 1.98 } };
 
-    yield { label: "Provider → GET /events (poll)", side: "provider" };
-    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
+    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
+    const events = await pollEvents(ctx.provider, startTs);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
 
     const finalEscrow = await apiGet<unknown>(`/escrows/${invoiceId}`, ctx.agent);
     yield { label: "Escrow settled", side: "both", response: finalEscrow };
