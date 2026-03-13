@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/remit-playground/",
+  base: "/",
   build: {
     outDir: "dist",
     rollupOptions: {
