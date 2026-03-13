@@ -25,13 +25,25 @@ export class ProviderPanel {
     if (step.side === "agent") return null;
 
     const card = document.createElement("div");
-    card.className = `step-enter rounded-lg border p-3 ${
-      step.error
-        ? "border-red-300 bg-red-50"
-        : isActive
-          ? "border-[#2ABFAB] bg-[#F0FAF8]"
-          : "border-[#D4D2CC] bg-white"
-    }`;
+    if (step.variant === "webhook") {
+      card.className = "step-enter rounded-lg border-2 border-dashed border-[#2ABFAB] bg-[#F0FAF8] p-3";
+      card.dataset["variant"] = "webhook";
+    } else {
+      card.className = `step-enter rounded-lg border p-3 ${
+        step.error
+          ? "border-red-300 bg-red-50"
+          : isActive
+            ? "border-[#2ABFAB] bg-[#F0FAF8]"
+            : "border-[#D4D2CC] bg-white"
+      }`;
+    }
+
+    if (step.variant === "webhook") {
+      const badge = document.createElement("div");
+      badge.className = "text-xs font-semibold text-[#2ABFAB] mb-1";
+      badge.textContent = "📬 Webhook";
+      card.appendChild(badge);
+    }
 
     const label = document.createElement("div");
     label.className = "text-sm font-medium text-black";
@@ -50,7 +62,7 @@ export class ProviderPanel {
 
   /** Transition a card from active to settled state. */
   deactivateCard(card: HTMLElement | null): void {
-    if (!card) return;
+    if (!card || card.dataset["variant"] === "webhook") return;
     card.className = "step-enter rounded-lg border p-3 border-[#D4D2CC] bg-white";
   }
 

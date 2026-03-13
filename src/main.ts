@@ -309,7 +309,12 @@ function buildLayout(root: HTMLElement): void {
         }`;
       });
       // Update description
-      descEl.textContent = flow.description;
+      descSpan.textContent = flow.description;
+      if (WEBHOOK_FLOWS.has(flow.id)) {
+        if (!webhookHint.parentElement) descEl.appendChild(webhookHint);
+      } else {
+        webhookHint.remove();
+      }
     });
 
     flowBar.appendChild(pill);
@@ -346,8 +351,14 @@ function buildLayout(root: HTMLElement): void {
   flowContainer.appendChild(walletBar);
 
   // Flow description bar
+  const WEBHOOK_FLOWS = new Set(["escrow", "bounty", "stream", "tab"]);
   const descEl = el("div", "px-4 py-1 text-xs text-[#9B9B9B] bg-[#FAFAF7] border-b border-[#E5E3DE] shrink-0");
-  descEl.textContent = activeFlow.description;
+  const descSpan = el("span", "");
+  descSpan.textContent = activeFlow.description;
+  descEl.appendChild(descSpan);
+  const webhookHint = el("span", "italic text-[#C0BFBA]");
+  webhookHint.textContent = " \u00b7 Register a webhook via POST /webhooks to receive these events automatically.";
+  if (WEBHOOK_FLOWS.has(activeFlow.id)) descEl.appendChild(webhookHint);
   flowContainer.appendChild(descEl);
 
   // Split panel area

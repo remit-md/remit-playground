@@ -44,6 +44,19 @@ export const streamFlow: Flow = {
     const events = await pollEvents(ctx.provider, startTs);
     yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
 
+    if (events.length > 0) {
+      yield {
+        label: "What your registered endpoint would receive",
+        side: "both",
+        variant: "webhook",
+        response: {
+          event: (events[0] as Record<string, unknown>).type ?? "payment.completed",
+          payload: events[0],
+          delivered_to: "https://your-webhook.example.com",
+        },
+      };
+    }
+
     const finalStream = await apiGet<unknown>(`/streams/${stream.id}`, ctx.agent);
     yield { label: "Stream final state", side: "both", response: finalStream };
   },

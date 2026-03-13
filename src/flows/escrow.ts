@@ -55,6 +55,19 @@ export const escrowFlow: Flow = {
     const events = await pollEvents(ctx.provider, startTs);
     yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
 
+    if (events.length > 0) {
+      yield {
+        label: "What your registered endpoint would receive",
+        side: "both",
+        variant: "webhook",
+        response: {
+          event: (events[0] as Record<string, unknown>).type ?? "payment.completed",
+          payload: events[0],
+          delivered_to: "https://your-webhook.example.com",
+        },
+      };
+    }
+
     const finalEscrow = await apiGet<unknown>(`/escrows/${invoiceId}`, ctx.agent);
     yield { label: "Escrow settled", side: "both", response: finalEscrow };
   },

@@ -8,6 +8,8 @@ export interface StepResult {
   error?: unknown;
   /** Simulated balance change (dollars). Negative = outflow. */
   balanceDelta?: { agent?: number; provider?: number };
+  /** Visual variant for special step cards. */
+  variant?: "webhook";
 }
 
 export interface FlowContext {
