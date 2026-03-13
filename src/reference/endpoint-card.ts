@@ -10,9 +10,9 @@ import type { PlaygroundWallet } from "../wallet.js";
 import type { EndpointDef, HttpMethod } from "./categories.js";
 
 const METHOD_COLORS: Record<HttpMethod, string> = {
-  GET: "bg-emerald-700 text-emerald-100",
-  POST: "bg-indigo-700 text-indigo-100",
-  DELETE: "bg-red-700 text-red-100",
+  GET: "bg-[#2ABFAB] text-white",
+  POST: "bg-[#2ABFAB] text-white",
+  DELETE: "bg-red-600 text-white",
 };
 
 export function renderEndpointCard(
@@ -21,11 +21,11 @@ export function renderEndpointCard(
   provider: PlaygroundWallet,
 ): HTMLElement {
   const card = document.createElement("div");
-  card.className = "rounded-lg border border-gray-700 bg-gray-900/60 overflow-hidden";
+  card.className = "rounded-lg border border-[#D4D2CC] bg-white overflow-hidden";
 
   // ── Header row: method badge + path + description + try button
   const header = document.createElement("div");
-  header.className = "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-800/40 transition-colors";
+  header.className = "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5F0EB] transition-colors";
 
   const badge = document.createElement("span");
   badge.className = `text-xs font-bold px-2 py-0.5 rounded ${METHOD_COLORS[ep.method]}`;
@@ -33,12 +33,12 @@ export function renderEndpointCard(
   header.appendChild(badge);
 
   const pathEl = document.createElement("span");
-  pathEl.className = "text-sm font-mono text-gray-200";
+  pathEl.className = "text-sm font-mono text-black";
   pathEl.textContent = ep.path;
   header.appendChild(pathEl);
 
   const desc = document.createElement("span");
-  desc.className = "text-xs text-gray-500 ml-2 hidden sm:inline";
+  desc.className = "text-xs text-[#9B9B9B] ml-2 hidden sm:inline";
   desc.textContent = ep.description;
   header.appendChild(desc);
 
@@ -49,7 +49,7 @@ export function renderEndpointCard(
   // ── Try button
   if (ep.tryable) {
     const tryBtn = document.createElement("button");
-    tryBtn.className = "shrink-0 px-3 py-1 rounded text-xs font-medium bg-gray-700 text-gray-300 hover:bg-indigo-600 hover:text-white transition-colors";
+    tryBtn.className = "shrink-0 px-3 py-1 rounded text-xs font-medium bg-[#F5F0EB] text-black hover:bg-[#2ABFAB] hover:text-white transition-colors";
     tryBtn.textContent = "Try";
     tryBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -62,21 +62,21 @@ export function renderEndpointCard(
 
   // ── Expandable detail area (description on mobile + request body)
   const detail = document.createElement("div");
-  detail.className = "hidden border-t border-gray-800";
+  detail.className = "hidden border-t border-[#E5E3DE]";
 
   const detailInner = document.createElement("div");
   detailInner.className = "px-4 py-3 space-y-2";
 
   // Description (always visible in detail)
   const detailDesc = document.createElement("div");
-  detailDesc.className = "text-xs text-gray-400";
+  detailDesc.className = "text-xs text-[#9B9B9B]";
   detailDesc.textContent = ep.description;
   detailInner.appendChild(detailDesc);
 
   // Sample request body (for POST/DELETE with buildRequest)
   if (ep.buildRequest) {
     const reqLabel = document.createElement("div");
-    reqLabel.className = "text-xs text-gray-500 font-semibold mt-2";
+    reqLabel.className = "text-xs text-[#9B9B9B] font-semibold mt-2";
     reqLabel.textContent = "Request body:";
     detailInner.appendChild(reqLabel);
     const sampleBody = ep.buildRequest(agent, provider);
@@ -85,7 +85,7 @@ export function renderEndpointCard(
 
   // Auth info
   const authLabel = document.createElement("div");
-  authLabel.className = "text-xs text-gray-600 mt-2";
+  authLabel.className = "text-xs text-[#C0BFBA] mt-2";
   if (ep.noAuth) {
     authLabel.textContent = "Auth: none (public)";
   } else {
@@ -118,10 +118,10 @@ async function fireRequest(
   resultArea: HTMLElement,
 ): Promise<void> {
   resultArea.innerHTML = "";
-  resultArea.className = "border-t border-gray-800 px-4 py-3";
+  resultArea.className = "border-t border-[#E5E3DE] px-4 py-3";
 
   const spinner = document.createElement("div");
-  spinner.className = "text-xs text-gray-500 pulse";
+  spinner.className = "text-xs text-[#9B9B9B] pulse";
   spinner.textContent = "Requesting…";
   resultArea.appendChild(spinner);
 
@@ -151,7 +151,7 @@ async function fireRequest(
 
     resultArea.innerHTML = "";
     const statusBadge = document.createElement("span");
-    statusBadge.className = "text-xs font-medium text-emerald-400";
+    statusBadge.className = "text-xs font-medium text-[#2ABFAB]";
     statusBadge.textContent = "Success";
     resultArea.appendChild(statusBadge);
     resultArea.appendChild(renderJsonViewer(data, false));

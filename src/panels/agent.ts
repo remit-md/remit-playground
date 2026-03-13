@@ -7,10 +7,10 @@ export class AgentPanel {
 
   constructor(container: HTMLElement) {
     this.el = document.createElement("div");
-    this.el.className = "flex flex-col flex-1 min-h-0 border-r border-gray-800";
+    this.el.className = "flex flex-col flex-1 min-h-0 border-r border-[#E5E3DE]";
 
     const header = document.createElement("div");
-    header.className = "px-4 py-2 bg-gray-900 border-b border-gray-800 text-xs font-semibold text-indigo-400 uppercase tracking-wider";
+    header.className = "px-4 py-2 bg-white border-b border-[#E5E3DE] text-xs font-semibold text-[#2ABFAB] uppercase tracking-wider";
     header.textContent = "Agent";
 
     this.stepsEl = document.createElement("div");
@@ -27,14 +27,14 @@ export class AgentPanel {
     const card = document.createElement("div");
     card.className = `step-enter rounded-lg border p-3 ${
       step.error
-        ? "border-red-700 bg-red-950/40"
+        ? "border-red-300 bg-red-50"
         : isActive
-          ? "border-indigo-500 bg-indigo-950/40"
-          : "border-gray-700 bg-gray-900/60"
+          ? "border-[#2ABFAB] bg-[#F0FAF8]"
+          : "border-[#D4D2CC] bg-white"
     }`;
 
     const label = document.createElement("div");
-    label.className = "text-sm font-medium text-gray-200";
+    label.className = "text-sm font-medium text-black";
     label.textContent = step.label;
     card.appendChild(label);
 
@@ -51,7 +51,7 @@ export class AgentPanel {
   /** Transition a card from active to settled state. */
   deactivateCard(card: HTMLElement | null): void {
     if (!card) return;
-    card.className = "step-enter rounded-lg border p-3 border-gray-700 bg-gray-900/60";
+    card.className = "step-enter rounded-lg border p-3 border-[#D4D2CC] bg-white";
   }
 
   clear(): void {

@@ -94,7 +94,7 @@ async function checkConnectivity(): Promise<void> {
   try {
     const res = await fetch(`${BASE_URL.replace("/api/v0", "")}/health`);
     if (res.ok) {
-      statusDotEl.className = "w-2 h-2 rounded-full bg-green-400";
+      statusDotEl.className = "w-2 h-2 rounded-full bg-[#2ABFAB]";
       statusTextEl.textContent = "Base Sepolia";
     } else {
       throw new Error();
@@ -248,32 +248,32 @@ async function resetFlow(): Promise<void> {
 
 function buildLayout(root: HTMLElement): void {
   // Header
-  const header = el("header", "flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800 shrink-0");
+  const header = el("header", "flex items-center justify-between px-4 py-3 bg-white border-b border-[#E5E3DE] shrink-0");
 
   const brand = el("div", "flex items-center gap-2");
-  brand.appendChild(el("span", "text-lg font-bold text-white", "remit.md"));
-  brand.appendChild(el("span", "text-sm text-gray-500", "playground"));
+  brand.appendChild(el("span", "text-lg font-bold text-black", "remit.md"));
+  brand.appendChild(el("span", "text-sm text-[#9B9B9B]", "playground"));
   header.appendChild(brand);
 
   // Section toggle: Flows | API Reference
-  const sectionToggle = el("div", "flex items-center gap-1 bg-gray-800 rounded-full p-0.5");
-  const flowsTab = btn("Flows", "px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition-colors");
-  const refTab = btn("API Reference", "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-gray-400 hover:text-gray-200 transition-colors");
+  const sectionToggle = el("div", "flex items-center gap-1 bg-[#F5F0EB] rounded-full p-0.5");
+  const flowsTab = btn("Flows", "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors");
+  const refTab = btn("API Reference", "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#9B9B9B] hover:text-black transition-colors");
   sectionToggle.appendChild(flowsTab);
   sectionToggle.appendChild(refTab);
   header.appendChild(sectionToggle);
 
   // Status indicator
   const statusArea = el("div", "flex items-center gap-2");
-  statusDotEl = el("span", "w-2 h-2 rounded-full bg-gray-600") as HTMLElement;
-  statusTextEl = el("span", "text-xs text-gray-500", "connecting…") as HTMLElement;
+  statusDotEl = el("span", "w-2 h-2 rounded-full bg-[#9B9B9B]") as HTMLElement;
+  statusTextEl = el("span", "text-xs text-[#9B9B9B]", "connecting…") as HTMLElement;
   statusArea.appendChild(statusDotEl);
   statusArea.appendChild(statusTextEl);
   header.appendChild(statusArea);
   root.appendChild(header);
 
   // Init banner
-  const banner = el("div", "hidden text-center text-sm text-indigo-300 bg-indigo-950/40 py-2 px-4 border-b border-indigo-800/40 shrink-0");
+  const banner = el("div", "hidden text-center text-sm text-[#2ABFAB] bg-[#F0FAF8] py-2 px-4 border-b border-[#2ABFAB]/20 shrink-0");
   banner.id = "status-banner";
   root.appendChild(banner);
 
@@ -281,15 +281,15 @@ function buildLayout(root: HTMLElement): void {
   const flowContainer = el("div", "flex flex-col flex-1 min-h-0");
 
   // Flow selector
-  const flowBar = el("div", "flex items-center gap-1 px-4 py-2 bg-gray-900 border-b border-gray-800 shrink-0 overflow-x-auto");
-  const flowLabel = el("span", "text-xs text-gray-500 mr-2 shrink-0", "Flow:");
+  const flowBar = el("div", "flex items-center gap-1 px-4 py-2 bg-white border-b border-[#E5E3DE] shrink-0 overflow-x-auto");
+  const flowLabel = el("span", "text-xs text-[#9B9B9B] mr-2 shrink-0", "Flow:");
   flowBar.appendChild(flowLabel);
 
   for (const flow of ALL_FLOWS) {
     const pill = btn(flow.label, `shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
       flow.id === activeFlow.id
-        ? "bg-indigo-600 text-white"
-        : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+        ? "bg-[#2ABFAB] text-white"
+        : "bg-[#F5F0EB] text-[#9B9B9B] hover:bg-[#EDECE8] hover:text-black"
     }`);
     pill.dataset["flowId"] = flow.id;
 
@@ -304,8 +304,8 @@ function buildLayout(root: HTMLElement): void {
       flowBar.querySelectorAll("button").forEach((b) => {
         b.className = `shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
           b.dataset["flowId"] === flow.id
-            ? "bg-indigo-600 text-white"
-            : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+            ? "bg-[#2ABFAB] text-white"
+            : "bg-[#F5F0EB] text-[#9B9B9B] hover:bg-[#EDECE8] hover:text-black"
         }`;
       });
       // Update description
@@ -317,21 +317,21 @@ function buildLayout(root: HTMLElement): void {
   flowContainer.appendChild(flowBar);
 
   // Wallet info bar
-  const walletBar = el("div", "flex items-center gap-4 px-4 py-2 bg-gray-900/60 border-b border-gray-800 text-xs shrink-0");
+  const walletBar = el("div", "flex items-center gap-4 px-4 py-2 bg-white/60 border-b border-[#E5E3DE] text-xs shrink-0");
 
   const agentInfo = el("div", "flex items-center gap-2");
-  agentInfo.appendChild(el("span", "text-indigo-400 font-semibold", "Agent"));
-  agentInfo.appendChild(el("span", "text-gray-500 font-mono", ""));  // address filled later
-  agentBalanceEl = el("span", "text-white font-medium", "$…") as HTMLElement;
+  agentInfo.appendChild(el("span", "text-[#2ABFAB] font-semibold", "Agent"));
+  agentInfo.appendChild(el("span", "text-[#9B9B9B] font-mono", ""));  // address filled later
+  agentBalanceEl = el("span", "text-black font-medium", "$…") as HTMLElement;
   agentInfo.appendChild(agentBalanceEl);
   walletBar.appendChild(agentInfo);
 
-  walletBar.appendChild(el("span", "text-gray-700", "·"));
+  walletBar.appendChild(el("span", "text-[#D4D2CC]", "·"));
 
   const providerInfo = el("div", "flex items-center gap-2");
-  providerInfo.appendChild(el("span", "text-emerald-400 font-semibold", "Provider"));
-  providerInfo.appendChild(el("span", "text-gray-500 font-mono", ""));
-  providerBalanceEl = el("span", "text-white font-medium", "$…") as HTMLElement;
+  providerInfo.appendChild(el("span", "text-[#2ABFAB] font-semibold", "Provider"));
+  providerInfo.appendChild(el("span", "text-[#9B9B9B] font-mono", ""));
+  providerBalanceEl = el("span", "text-black font-medium", "$…") as HTMLElement;
   providerInfo.appendChild(providerBalanceEl);
   walletBar.appendChild(providerInfo);
 
@@ -346,7 +346,7 @@ function buildLayout(root: HTMLElement): void {
   flowContainer.appendChild(walletBar);
 
   // Flow description bar
-  const descEl = el("div", "px-4 py-1 text-xs text-gray-500 bg-gray-950 border-b border-gray-800 shrink-0");
+  const descEl = el("div", "px-4 py-1 text-xs text-[#9B9B9B] bg-[#FAFAF7] border-b border-[#E5E3DE] shrink-0");
   descEl.textContent = activeFlow.description;
   flowContainer.appendChild(descEl);
 
@@ -357,11 +357,11 @@ function buildLayout(root: HTMLElement): void {
   flowContainer.appendChild(panels);
 
   // Controls footer
-  const footer = el("div", "flex items-center gap-3 px-4 py-3 bg-gray-900 border-t border-gray-800 shrink-0");
+  const footer = el("div", "flex items-center gap-3 px-4 py-3 bg-white border-t border-[#E5E3DE] shrink-0");
 
-  runBtn = btn("▶ Run", "px-4 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-colors disabled:opacity-40") as HTMLButtonElement;
-  stepBtn = btn("⏭ Step", "px-4 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-sm font-medium text-gray-200 transition-colors disabled:opacity-40") as HTMLButtonElement;
-  resetBtn = btn("↺ Reset", "px-4 py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-sm font-medium text-gray-400 transition-colors disabled:opacity-40") as HTMLButtonElement;
+  runBtn = btn("▶ Run", "px-4 py-1.5 rounded bg-[#2ABFAB] hover:bg-[#24A896] text-sm font-medium text-white transition-colors disabled:opacity-40") as HTMLButtonElement;
+  stepBtn = btn("⏭ Step", "px-4 py-1.5 rounded bg-[#EDECE8] hover:bg-[#E5E3DE] text-sm font-medium text-black transition-colors disabled:opacity-40") as HTMLButtonElement;
+  resetBtn = btn("↺ Reset", "px-4 py-1.5 rounded bg-[#F5F0EB] hover:bg-[#EDECE8] text-sm font-medium text-[#9B9B9B] transition-colors disabled:opacity-40") as HTMLButtonElement;
 
   runBtn.addEventListener("click", () => void runFullFlow());
   stepBtn.addEventListener("click", () => {
@@ -378,14 +378,14 @@ function buildLayout(root: HTMLElement): void {
   footer.appendChild(resetBtn);
 
   const footerRight = el("div", "ml-auto flex items-center gap-2");
-  footerRight.appendChild(el("span", "text-xs text-gray-600", "Base Sepolia"));
+  footerRight.appendChild(el("span", "text-xs text-[#C0BFBA]", "Base Sepolia"));
   footer.appendChild(footerRight);
 
   flowContainer.appendChild(footer);
   root.appendChild(flowContainer);
 
   // ── API Reference container (hidden by default)
-  const refContainer = el("div", "hidden flex-1 min-h-0 bg-gray-950");
+  const refContainer = el("div", "hidden flex-1 min-h-0 bg-[#FAFAF7]");
   let refBuilt = false;
   root.appendChild(refContainer);
 
@@ -394,16 +394,16 @@ function buildLayout(root: HTMLElement): void {
     flowContainer.classList.remove("hidden");
     flowContainer.classList.add("flex", "flex-col");
     refContainer.classList.add("hidden");
-    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition-colors";
-    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-gray-400 hover:text-gray-200 transition-colors";
+    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors";
+    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#9B9B9B] hover:text-black transition-colors";
   }
 
   function showReference(): void {
     flowContainer.classList.add("hidden");
     flowContainer.classList.remove("flex", "flex-col");
     refContainer.classList.remove("hidden");
-    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition-colors";
-    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-gray-400 hover:text-gray-200 transition-colors";
+    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors";
+    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#9B9B9B] hover:text-black transition-colors";
     // Lazy-build the reference page on first view
     if (!refBuilt) {
       buildReferencePage(refContainer, agentWallet, providerWallet);

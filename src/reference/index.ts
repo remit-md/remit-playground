@@ -23,12 +23,12 @@ export function buildReferencePage(
   pageHeader.className = "mb-4";
 
   const title = document.createElement("h1");
-  title.className = "text-lg font-bold text-white";
+  title.className = "text-lg font-bold text-black";
   title.textContent = "API Reference";
   pageHeader.appendChild(title);
 
   const subtitle = document.createElement("p");
-  subtitle.className = "text-sm text-gray-500 mt-1";
+  subtitle.className = "text-sm text-[#9B9B9B] mt-1";
   subtitle.textContent = "Every endpoint in the remit.md protocol. Click \"Try\" to fire live requests against Base Sepolia.";
   pageHeader.appendChild(subtitle);
 
@@ -39,24 +39,24 @@ export function buildReferencePage(
 
   for (const cat of categories) {
     const section = document.createElement("div");
-    section.className = "rounded-xl border border-gray-800 bg-gray-950/60 overflow-hidden";
+    section.className = "rounded-xl border border-[#E5E3DE] bg-white overflow-hidden";
 
     // Category header (collapsible)
     const catHeader = document.createElement("div");
-    catHeader.className = "flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-gray-800/40 transition-colors select-none";
+    catHeader.className = "flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-[#F5F0EB] transition-colors select-none";
 
     const chevron = document.createElement("span");
-    chevron.className = "text-gray-500 text-xs transition-transform";
+    chevron.className = "text-[#9B9B9B] text-xs transition-transform";
     chevron.textContent = "\u25BC";
     catHeader.appendChild(chevron);
 
     const catName = document.createElement("span");
-    catName.className = "text-sm font-semibold text-gray-200";
+    catName.className = "text-sm font-semibold text-black";
     catName.textContent = cat.name;
     catHeader.appendChild(catName);
 
     const countBadge = document.createElement("span");
-    countBadge.className = "text-xs text-gray-600 ml-1";
+    countBadge.className = "text-xs text-[#C0BFBA] ml-1";
     countBadge.textContent = `(${cat.endpoints.length})`;
     catHeader.appendChild(countBadge);
 
