@@ -15,7 +15,7 @@ export interface PlaygroundWallet {
 }
 
 const CHAIN_ID = 84532; // Base Sepolia
-const ROUTER_ADDRESS = "0x63d62554CDC9C50bf998339888116D02e0a34A3b";
+const ROUTER_ADDRESS = "0x887536bD817B758f99F090a80F48032a24f50916";
 
 const EIP712_DOMAIN = {
   name: "remit.md",

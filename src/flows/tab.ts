@@ -5,7 +5,7 @@ import type { Flow, StepResult, FlowContext } from "./types.js";
 const PER_UNIT = 0.5;
 const LIMIT = 10;
 
-const TAB_CONTRACT = "0x02c0f4f65e665f7995c2846ef0094d81fccb117c";
+const TAB_CONTRACT = "0x3caC3F19904b68eefaD39df70da513cF04725126";
 const TAB_EIP712_DOMAIN = {
   name: "RemitTab",
   version: "1",
