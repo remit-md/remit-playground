@@ -156,12 +156,12 @@ async function runFullFlow(): Promise<void> {
 
   try {
     for await (const step of activeFlow.run(ctx)) {
-      agentPanel.addStep(step, true);
-      providerPanel.addStep(step, true);
+      const agentCard = agentPanel.addStep(step, true);
+      const providerCard = providerPanel.addStep(step, true);
       applyDelta(step);
       await new Promise((r) => setTimeout(r, 600));
-      agentPanel.addStep(step, false);
-      providerPanel.addStep(step, false);
+      agentPanel.deactivateCard(agentCard);
+      providerPanel.deactivateCard(providerCard);
     }
   } catch (err) {
     const errorStep: StepResult = {

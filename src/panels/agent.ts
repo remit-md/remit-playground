@@ -21,8 +21,8 @@ export class AgentPanel {
     container.appendChild(this.el);
   }
 
-  addStep(step: StepResult, isActive = false): void {
-    if (step.side === "provider") return;
+  addStep(step: StepResult, isActive = false): HTMLElement | null {
+    if (step.side === "provider") return null;
 
     const card = document.createElement("div");
     card.className = `step-enter rounded-lg border p-3 ${
@@ -45,6 +45,13 @@ export class AgentPanel {
 
     this.stepsEl.appendChild(card);
     card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return card;
+  }
+
+  /** Transition a card from active to settled state. */
+  deactivateCard(card: HTMLElement | null): void {
+    if (!card) return;
+    card.className = "step-enter rounded-lg border p-3 border-gray-700 bg-gray-900/60";
   }
 
   clear(): void {
