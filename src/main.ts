@@ -9,6 +9,7 @@ import { AgentPanel } from "./panels/agent.js";
 import { ProviderPanel } from "./panels/provider.js";
 import { ALL_FLOWS } from "./flows/index.js";
 import type { Flow, StepResult, FlowContext } from "./flows/types.js";
+import { buildReferencePage } from "./reference/index.js";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -250,6 +251,14 @@ function buildLayout(root: HTMLElement): void {
   brand.appendChild(el("span", "text-sm text-gray-500", "playground"));
   header.appendChild(brand);
 
+  // Section toggle: Flows | API Reference
+  const sectionToggle = el("div", "flex items-center gap-1 bg-gray-800 rounded-full p-0.5");
+  const flowsTab = btn("Flows", "px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition-colors");
+  const refTab = btn("API Reference", "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-gray-400 hover:text-gray-200 transition-colors");
+  sectionToggle.appendChild(flowsTab);
+  sectionToggle.appendChild(refTab);
+  header.appendChild(sectionToggle);
+
   // Status indicator
   const statusArea = el("div", "flex items-center gap-2");
   statusDotEl = el("span", "w-2 h-2 rounded-full bg-gray-600") as HTMLElement;
@@ -263,6 +272,9 @@ function buildLayout(root: HTMLElement): void {
   const banner = el("div", "hidden text-center text-sm text-indigo-300 bg-indigo-950/40 py-2 px-4 border-b border-indigo-800/40 shrink-0");
   banner.id = "status-banner";
   root.appendChild(banner);
+
+  // ── Flow container (everything specific to the Flows section)
+  const flowContainer = el("div", "flex flex-col flex-1 min-h-0");
 
   // Flow selector
   const flowBar = el("div", "flex items-center gap-1 px-4 py-2 bg-gray-900 border-b border-gray-800 shrink-0 overflow-x-auto");
@@ -298,7 +310,7 @@ function buildLayout(root: HTMLElement): void {
 
     flowBar.appendChild(pill);
   }
-  root.appendChild(flowBar);
+  flowContainer.appendChild(flowBar);
 
   // Wallet info bar
   const walletBar = el("div", "flex items-center gap-4 px-4 py-2 bg-gray-900/60 border-b border-gray-800 text-xs shrink-0");
@@ -327,18 +339,18 @@ function buildLayout(root: HTMLElement): void {
     if (pspans[1]) pspans[1].textContent = providerWallet.address.slice(0, 10) + "…";
   }, 100);
 
-  root.appendChild(walletBar);
+  flowContainer.appendChild(walletBar);
 
   // Flow description bar
   const descEl = el("div", "px-4 py-1 text-xs text-gray-500 bg-gray-950 border-b border-gray-800 shrink-0");
   descEl.textContent = activeFlow.description;
-  root.appendChild(descEl);
+  flowContainer.appendChild(descEl);
 
   // Split panel area
   const panels = el("div", "flex flex-1 min-h-0");
   agentPanel = new AgentPanel(panels);
   providerPanel = new ProviderPanel(panels);
-  root.appendChild(panels);
+  flowContainer.appendChild(panels);
 
   // Controls footer
   const footer = el("div", "flex items-center gap-3 px-4 py-3 bg-gray-900 border-t border-gray-800 shrink-0");
@@ -365,7 +377,38 @@ function buildLayout(root: HTMLElement): void {
   footerRight.appendChild(el("span", "text-xs text-gray-600", "Base Sepolia"));
   footer.appendChild(footerRight);
 
-  root.appendChild(footer);
+  flowContainer.appendChild(footer);
+  root.appendChild(flowContainer);
+
+  // ── API Reference container (hidden by default)
+  const refContainer = el("div", "hidden flex-1 min-h-0 bg-gray-950");
+  let refBuilt = false;
+  root.appendChild(refContainer);
+
+  // ── Section toggle handlers
+  function showFlows(): void {
+    flowContainer.classList.remove("hidden");
+    flowContainer.classList.add("flex", "flex-col");
+    refContainer.classList.add("hidden");
+    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition-colors";
+    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-gray-400 hover:text-gray-200 transition-colors";
+  }
+
+  function showReference(): void {
+    flowContainer.classList.add("hidden");
+    flowContainer.classList.remove("flex", "flex-col");
+    refContainer.classList.remove("hidden");
+    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-indigo-600 text-white transition-colors";
+    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-gray-400 hover:text-gray-200 transition-colors";
+    // Lazy-build the reference page on first view
+    if (!refBuilt) {
+      buildReferencePage(refContainer, agentWallet, providerWallet);
+      refBuilt = true;
+    }
+  }
+
+  flowsTab.addEventListener("click", showFlows);
+  refTab.addEventListener("click", showReference);
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
