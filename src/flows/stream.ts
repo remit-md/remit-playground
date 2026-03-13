@@ -11,6 +11,7 @@ export const streamFlow: Flow = {
   description: "Pay by the second — open, accrue, withdraw, close.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
+    const startTs = Math.floor(Date.now() / 1000);
     const streamReq = { payee: ctx.provider.address, rate_per_second: RATE, max_total: MAX_TOTAL };
     yield { label: "Agent → POST /streams (open)", side: "agent", request: streamReq };
 
@@ -38,6 +39,10 @@ export const streamFlow: Flow = {
     const accrued = withdrawAmount;
     const remainder = +(MAX_TOTAL - accrued).toFixed(6);
     yield { label: "Stream closed — remainder returned", side: "both", response: closeTx, balanceDelta: { agent: remainder } };
+
+    yield { label: "Provider → GET /events (poll)", side: "provider" };
+    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
 
     const finalStream = await apiGet<unknown>(`/streams/${stream.id}`, ctx.agent);
     yield { label: "Stream final state", side: "both", response: finalStream };

@@ -35,6 +35,7 @@ export const tabFlow: Flow = {
   description: "Open a tab, charge per API call, close to settle.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
+    const startTs = Math.floor(Date.now() / 1000);
     const expiry = Math.floor(Date.now() / 1000) + 3600;
     const tabReq = { provider: ctx.provider.address, limit_amount: LIMIT, per_unit: PER_UNIT, expiry };
     yield { label: "Agent → POST /tabs (open)", side: "agent", request: tabReq };
@@ -74,6 +75,10 @@ export const tabFlow: Flow = {
       ctx.agent,
     );
     yield { label: "Tab closed — USDC settled on-chain", side: "both", response: closeTx, balanceDelta: { agent: -cumulative, provider: +(cumulative * 0.99).toFixed(2) } };
+
+    yield { label: "Provider → GET /events (poll)", side: "provider" };
+    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
 
     const finalTab = await apiGet<unknown>(`/tabs/${tab.id}`, ctx.agent);
     yield { label: "Tab final state", side: "both", response: finalTab };

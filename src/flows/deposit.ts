@@ -7,6 +7,7 @@ export const depositFlow: Flow = {
   description: "Lock a deposit — returned or forfeited by provider.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
+    const startTs = Math.floor(Date.now() / 1000);
     const expiry = Math.floor(Date.now() / 1000) + 3600;
 
     const depositReq = { provider: ctx.provider.address, amount: 1.5, expiry };
@@ -30,6 +31,10 @@ export const depositFlow: Flow = {
       ctx.provider,
     );
     yield { label: "Deposit returned to agent", side: "both", response: returnTx, balanceDelta: { agent: 1.5 } };
+
+    yield { label: "Provider → GET /events (poll)", side: "provider" };
+    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
 
     const finalDeposit = await apiGet<unknown>(`/deposits/${deposit.id}`, ctx.agent);
     yield { label: "Deposit final state", side: "both", response: finalDeposit };

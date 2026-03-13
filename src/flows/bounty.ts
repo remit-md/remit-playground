@@ -8,6 +8,7 @@ export const bountyFlow: Flow = {
   description: "Post a task, submit work, award payment.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
+    const startTs = Math.floor(Date.now() / 1000);
     const deadline = Math.floor(Date.now() / 1000) + 3600;
     const evidenceHash = ethers.keccak256(ethers.toUtf8Bytes("playground haiku submission"));
 
@@ -47,6 +48,10 @@ export const bountyFlow: Flow = {
       ctx.agent,
     );
     yield { label: "Provider ← Bounty awarded", side: "both", response: awardTx, balanceDelta: { provider: 2.97 } };
+
+    yield { label: "Provider → GET /events (poll)", side: "provider" };
+    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
 
     const finalBounty = await apiGet<unknown>(`/bounties/${bounty.id}`, ctx.agent);
     yield { label: "Bounty complete", side: "both", response: finalBounty };

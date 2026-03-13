@@ -5,7 +5,7 @@
  * calls /x402/settle to claim the payment.
  */
 
-import { apiGetPublic, BASE_URL } from "../api.js";
+import { apiGet, apiGetPublic, BASE_URL } from "../api.js";
 import { signRequest } from "../wallet.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 import { ethers } from "ethers";
@@ -41,6 +41,8 @@ export const x402Flow: Flow = {
   description: "Pay-per-request: 402 → settle → 200.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
+    const startTs = Math.floor(Date.now() / 1000);
+
     // Step 1: Check supported payment schemes
     yield { label: "Agent → GET /x402/supported", side: "agent" };
     const supported = await apiGetPublic<{ assets: Record<string, Record<string, string>> }>("/x402/supported");
@@ -137,5 +139,9 @@ export const x402Flow: Flow = {
         response: settleParsed,
       };
     }
+
+    yield { label: "Provider → GET /events (poll)", side: "provider" };
+    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=5`, ctx.provider).catch(() => []);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
   },
 };

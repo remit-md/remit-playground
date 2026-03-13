@@ -8,6 +8,7 @@ export const escrowFlow: Flow = {
   description: "Fund → claim-start → release lifecycle.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
+    const startTs = Math.floor(Date.now() / 1000);
     const invoiceId = ethers.hexlify(ethers.randomBytes(16)).slice(2);
     const nonce = ethers.hexlify(ethers.randomBytes(16));
 
@@ -49,6 +50,10 @@ export const escrowFlow: Flow = {
     yield { label: "Agent → POST /escrows/:id/release (work done)", side: "agent" };
     const releaseTx = await apiPost<{ tx_hash: string }>(`/escrows/${invoiceId}/release`, {}, ctx.agent);
     yield { label: "Provider ← Funds released", side: "both", response: releaseTx, balanceDelta: { provider: 1.98 } };
+
+    yield { label: "Provider → GET /events (poll)", side: "provider" };
+    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=10`, ctx.provider).catch(() => []);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
 
     const finalEscrow = await apiGet<unknown>(`/escrows/${invoiceId}`, ctx.agent);
     yield { label: "Escrow settled", side: "both", response: finalEscrow };

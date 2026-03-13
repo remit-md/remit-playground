@@ -8,6 +8,7 @@ export const directFlow: Flow = {
   description: "Instant USDC transfer with no escrow.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
+    const startTs = Math.floor(Date.now() / 1000);
     const nonce = ethers.hexlify(ethers.randomBytes(16));
 
     const req = { to: ctx.provider.address, amount: 1.0, task: "playground demo" };
@@ -28,8 +29,8 @@ export const directFlow: Flow = {
 
     yield { label: "Server → 201 Transaction confirmed", side: "agent", response: tx, balanceDelta: { agent: -1.0, provider: 0.99 } };
 
-    yield { label: "Provider checks events", side: "provider" };
-    const events = await apiGet<unknown[]>(`/events?wallet=${ctx.provider.address}&limit=5`, ctx.provider);
-    yield { label: "Provider ← payment event received", side: "provider", response: events[0] ?? { note: "event may arrive shortly" } };
+    yield { label: "Provider → GET /events (poll)", side: "provider" };
+    const events = await apiGet<Record<string, unknown>[]>(`/events?since=${startTs}&limit=5`, ctx.provider).catch(() => []);
+    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "events pending" } };
   },
 };
