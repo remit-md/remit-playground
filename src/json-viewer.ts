@@ -24,7 +24,7 @@ export function renderJsonViewer(data: unknown, collapsed = false): HTMLElement 
   container.className = "mt-2";
 
   const toggle = document.createElement("button");
-  toggle.className = "text-xs text-[#9B9B9B] hover:text-black flex items-center gap-1 transition-colors";
+  toggle.className = "text-xs text-[#6B6B6B] hover:text-black flex items-center gap-1 transition-colors";
   toggle.innerHTML = `<span class="chevron">${collapsed ? "\u25B6" : "\u25BC"}</span> <span>JSON</span>`;
 
   const body = document.createElement("pre");

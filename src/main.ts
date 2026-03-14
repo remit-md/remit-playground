@@ -107,7 +107,7 @@ async function checkConnectivity(): Promise<void> {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-const FAUCET_THRESHOLD = 1; // Only auto-faucet if balance < $1
+const FAUCET_THRESHOLD = 10; // Only auto-faucet if balance < $10
 
 async function init(): Promise<void> {
   agentWallet = loadOrCreate("remit-playground-agent");
@@ -252,21 +252,21 @@ function buildLayout(root: HTMLElement): void {
 
   const brand = el("div", "flex items-center gap-2");
   brand.appendChild(el("span", "text-lg font-bold text-black", "remit.md"));
-  brand.appendChild(el("span", "text-sm text-[#9B9B9B]", "playground"));
+  brand.appendChild(el("span", "text-sm text-[#6B6B6B]", "playground"));
   header.appendChild(brand);
 
   // Section toggle: Flows | API Reference
   const sectionToggle = el("div", "flex items-center gap-1 bg-[#F5F0EB] rounded-full p-0.5");
   const flowsTab = btn("Flows", "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors");
-  const refTab = btn("API Reference", "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#9B9B9B] hover:text-black transition-colors");
+  const refTab = btn("API Reference", "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors");
   sectionToggle.appendChild(flowsTab);
   sectionToggle.appendChild(refTab);
   header.appendChild(sectionToggle);
 
   // Status indicator
   const statusArea = el("div", "flex items-center gap-2");
-  statusDotEl = el("span", "w-2 h-2 rounded-full bg-[#9B9B9B]") as HTMLElement;
-  statusTextEl = el("span", "text-xs text-[#9B9B9B]", "connecting…") as HTMLElement;
+  statusDotEl = el("span", "w-2 h-2 rounded-full bg-[#6B6B6B]") as HTMLElement;
+  statusTextEl = el("span", "text-xs text-[#6B6B6B]", "connecting…") as HTMLElement;
   statusArea.appendChild(statusDotEl);
   statusArea.appendChild(statusTextEl);
   header.appendChild(statusArea);
@@ -282,14 +282,14 @@ function buildLayout(root: HTMLElement): void {
 
   // Flow selector
   const flowBar = el("div", "flex items-center gap-1 px-4 py-2 bg-white border-b border-[#E5E3DE] shrink-0 overflow-x-auto");
-  const flowLabel = el("span", "text-xs text-[#9B9B9B] mr-2 shrink-0", "Flow:");
+  const flowLabel = el("span", "text-xs text-[#6B6B6B] mr-2 shrink-0", "Flow:");
   flowBar.appendChild(flowLabel);
 
   for (const flow of ALL_FLOWS) {
     const pill = btn(flow.label, `shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
       flow.id === activeFlow.id
         ? "bg-[#2ABFAB] text-white"
-        : "bg-[#F5F0EB] text-[#9B9B9B] hover:bg-[#EDECE8] hover:text-black"
+        : "bg-[#F5F0EB] text-[#6B6B6B] hover:bg-[#EDECE8] hover:text-black"
     }`);
     pill.dataset["flowId"] = flow.id;
 
@@ -305,7 +305,7 @@ function buildLayout(root: HTMLElement): void {
         b.className = `shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
           b.dataset["flowId"] === flow.id
             ? "bg-[#2ABFAB] text-white"
-            : "bg-[#F5F0EB] text-[#9B9B9B] hover:bg-[#EDECE8] hover:text-black"
+            : "bg-[#F5F0EB] text-[#6B6B6B] hover:bg-[#EDECE8] hover:text-black"
         }`;
       });
       // Update description
@@ -326,7 +326,7 @@ function buildLayout(root: HTMLElement): void {
 
   const agentInfo = el("div", "flex items-center gap-2");
   agentInfo.appendChild(el("span", "text-[#2ABFAB] font-semibold", "Agent"));
-  agentInfo.appendChild(el("span", "text-[#9B9B9B] font-mono", ""));  // address filled later
+  agentInfo.appendChild(el("span", "text-[#6B6B6B] font-mono", ""));  // address filled later
   agentBalanceEl = el("span", "text-black font-medium", "$…") as HTMLElement;
   agentInfo.appendChild(agentBalanceEl);
   walletBar.appendChild(agentInfo);
@@ -335,7 +335,7 @@ function buildLayout(root: HTMLElement): void {
 
   const providerInfo = el("div", "flex items-center gap-2");
   providerInfo.appendChild(el("span", "text-[#2ABFAB] font-semibold", "Provider"));
-  providerInfo.appendChild(el("span", "text-[#9B9B9B] font-mono", ""));
+  providerInfo.appendChild(el("span", "text-[#6B6B6B] font-mono", ""));
   providerBalanceEl = el("span", "text-black font-medium", "$…") as HTMLElement;
   providerInfo.appendChild(providerBalanceEl);
   walletBar.appendChild(providerInfo);
@@ -352,11 +352,11 @@ function buildLayout(root: HTMLElement): void {
 
   // Flow description bar
   const WEBHOOK_FLOWS = new Set(["escrow", "bounty", "stream", "tab"]);
-  const descEl = el("div", "px-4 py-1 text-xs text-[#9B9B9B] bg-[#FAFAF7] border-b border-[#E5E3DE] shrink-0");
+  const descEl = el("div", "px-4 py-1 text-xs text-[#6B6B6B] bg-[#FAFAF7] border-b border-[#E5E3DE] shrink-0");
   const descSpan = el("span", "");
   descSpan.textContent = activeFlow.description;
   descEl.appendChild(descSpan);
-  const webhookHint = el("span", "italic text-[#C0BFBA]");
+  const webhookHint = el("span", "italic text-[#8A8A8A]");
   webhookHint.textContent = " \u00b7 Register a webhook via POST /webhooks to receive these events automatically.";
   if (WEBHOOK_FLOWS.has(activeFlow.id)) descEl.appendChild(webhookHint);
   flowContainer.appendChild(descEl);
@@ -372,7 +372,7 @@ function buildLayout(root: HTMLElement): void {
 
   runBtn = btn("▶ Run", "px-4 py-1.5 rounded bg-[#2ABFAB] hover:bg-[#24A896] text-sm font-medium text-white transition-colors disabled:opacity-40") as HTMLButtonElement;
   stepBtn = btn("⏭ Step", "px-4 py-1.5 rounded bg-[#EDECE8] hover:bg-[#E5E3DE] text-sm font-medium text-black transition-colors disabled:opacity-40") as HTMLButtonElement;
-  resetBtn = btn("↺ Reset", "px-4 py-1.5 rounded bg-[#F5F0EB] hover:bg-[#EDECE8] text-sm font-medium text-[#9B9B9B] transition-colors disabled:opacity-40") as HTMLButtonElement;
+  resetBtn = btn("↺ Reset", "px-4 py-1.5 rounded bg-[#F5F0EB] hover:bg-[#EDECE8] text-sm font-medium text-[#6B6B6B] transition-colors disabled:opacity-40") as HTMLButtonElement;
 
   runBtn.addEventListener("click", () => void runFullFlow());
   stepBtn.addEventListener("click", () => {
@@ -389,7 +389,7 @@ function buildLayout(root: HTMLElement): void {
   footer.appendChild(resetBtn);
 
   const footerRight = el("div", "ml-auto flex items-center gap-2");
-  footerRight.appendChild(el("span", "text-xs text-[#C0BFBA]", "Base Sepolia"));
+  footerRight.appendChild(el("span", "text-xs text-[#8A8A8A]", "Base Sepolia"));
   footer.appendChild(footerRight);
 
   flowContainer.appendChild(footer);
@@ -406,7 +406,7 @@ function buildLayout(root: HTMLElement): void {
     flowContainer.classList.add("flex", "flex-col");
     refContainer.classList.add("hidden");
     flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors";
-    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#9B9B9B] hover:text-black transition-colors";
+    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
   }
 
   function showReference(): void {
@@ -414,7 +414,7 @@ function buildLayout(root: HTMLElement): void {
     flowContainer.classList.remove("flex", "flex-col");
     refContainer.classList.remove("hidden");
     refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors";
-    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#9B9B9B] hover:text-black transition-colors";
+    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
     // Lazy-build the reference page on first view
     if (!refBuilt) {
       buildReferencePage(refContainer, agentWallet, providerWallet);

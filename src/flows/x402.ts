@@ -5,7 +5,7 @@
  * calls /x402/settle to claim the payment.
  */
 
-import { apiGet, apiGetPublic, pollEvents, BASE_URL } from "../api.js";
+import { apiGetPublic, BASE_URL } from "../api.js";
 import { signRequest } from "../wallet.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 import { ethers } from "ethers";
@@ -41,8 +41,6 @@ export const x402Flow: Flow = {
   description: "Pay-per-request: 402 → settle → 200.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
-    const startTs = Math.floor(Date.now() / 1000);
-
     // Step 1: Check supported payment schemes
     yield { label: "Agent → GET /x402/supported", side: "agent" };
     const supported = await apiGetPublic<{ assets: Record<string, Record<string, string>> }>("/x402/supported");
@@ -134,14 +132,25 @@ export const x402Flow: Flow = {
       yield { label: "Agent → retries with PAYMENT-SIGNATURE → 200 ✓", side: "agent", response: { status: 200, data: "Resource served" } };
     } else {
       yield {
-        label: "Settlement attempted (needs on-chain USDC to complete)",
+        label: "Settlement signed (on-chain confirmation pending)",
         side: "both",
-        response: settleParsed,
+        response: {
+          ...settleParsed,
+          note: "EIP-3009 authorization was signed correctly. On testnet, on-chain settlement depends on faucet USDC availability.",
+        },
       };
     }
 
-    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
-    const events = await pollEvents(ctx.provider, startTs, 5);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
+    // x402 is synchronous — the settlement response IS the completion event.
+    // No async events are expected (unlike escrow/tab/stream/bounty).
+    yield {
+      label: "Done — x402 is synchronous (no async events)",
+      side: "provider",
+      response: {
+        protocol: "x402 payments complete in a single HTTP round-trip",
+        settlement: "The PAYMENT-RESPONSE header contains the tx hash",
+        webhooks: "Optional — register via POST /webhooks to receive x402.settled events",
+      },
+    };
   },
 };

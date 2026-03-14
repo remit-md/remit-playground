@@ -28,7 +28,7 @@ export function buildReferencePage(
   pageHeader.appendChild(title);
 
   const subtitle = document.createElement("p");
-  subtitle.className = "text-sm text-[#9B9B9B] mt-1";
+  subtitle.className = "text-sm text-[#6B6B6B] mt-1";
   subtitle.textContent = "Every endpoint in the remit.md protocol. Click \"Try\" to fire live requests against Base Sepolia.";
   pageHeader.appendChild(subtitle);
 
@@ -46,7 +46,7 @@ export function buildReferencePage(
     catHeader.className = "flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-[#F5F0EB] transition-colors select-none";
 
     const chevron = document.createElement("span");
-    chevron.className = "text-[#9B9B9B] text-xs transition-transform";
+    chevron.className = "text-[#6B6B6B] text-xs transition-transform";
     chevron.textContent = "\u25BC";
     catHeader.appendChild(chevron);
 
@@ -56,7 +56,7 @@ export function buildReferencePage(
     catHeader.appendChild(catName);
 
     const countBadge = document.createElement("span");
-    countBadge.className = "text-xs text-[#C0BFBA] ml-1";
+    countBadge.className = "text-xs text-[#8A8A8A] ml-1";
     countBadge.textContent = `(${cat.endpoints.length})`;
     catHeader.appendChild(countBadge);
 

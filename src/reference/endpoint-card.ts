@@ -38,7 +38,7 @@ export function renderEndpointCard(
   header.appendChild(pathEl);
 
   const desc = document.createElement("span");
-  desc.className = "text-xs text-[#9B9B9B] ml-2 hidden sm:inline";
+  desc.className = "text-xs text-[#6B6B6B] ml-2 hidden sm:inline";
   desc.textContent = ep.description;
   header.appendChild(desc);
 
@@ -69,14 +69,14 @@ export function renderEndpointCard(
 
   // Description (always visible in detail)
   const detailDesc = document.createElement("div");
-  detailDesc.className = "text-xs text-[#9B9B9B]";
+  detailDesc.className = "text-xs text-[#6B6B6B]";
   detailDesc.textContent = ep.description;
   detailInner.appendChild(detailDesc);
 
   // Sample request body (for POST/DELETE with buildRequest)
   if (ep.buildRequest) {
     const reqLabel = document.createElement("div");
-    reqLabel.className = "text-xs text-[#9B9B9B] font-semibold mt-2";
+    reqLabel.className = "text-xs text-[#6B6B6B] font-semibold mt-2";
     reqLabel.textContent = "Request body:";
     detailInner.appendChild(reqLabel);
     const sampleBody = ep.buildRequest(agent, provider);
@@ -85,7 +85,7 @@ export function renderEndpointCard(
 
   // Auth info
   const authLabel = document.createElement("div");
-  authLabel.className = "text-xs text-[#C0BFBA] mt-2";
+  authLabel.className = "text-xs text-[#8A8A8A] mt-2";
   if (ep.noAuth) {
     authLabel.textContent = "Auth: none (public)";
   } else {
@@ -121,7 +121,7 @@ async function fireRequest(
   resultArea.className = "border-t border-[#E5E3DE] px-4 py-3";
 
   const spinner = document.createElement("div");
-  spinner.className = "text-xs text-[#9B9B9B] pulse";
+  spinner.className = "text-xs text-[#6B6B6B] pulse";
   spinner.textContent = "Requesting…";
   resultArea.appendChild(spinner);
 
