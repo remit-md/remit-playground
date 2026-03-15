@@ -278,17 +278,6 @@ export function buildCategories(): Category[] {
       ],
     },
     {
-      name: "Events (SSE)",
-      endpoints: [
-        {
-          method: "GET",
-          path: "/events/stream",
-          description: "SSE stream — real-time events for authenticated wallet. Same payload as webhooks. Max 10 connections, auto-closes after 30 min. Use fetch + ReadableStream (EventSource doesn't support custom headers).",
-          tryable: false,
-        },
-      ],
-    },
-    {
       name: "Webhooks",
       endpoints: [
         {

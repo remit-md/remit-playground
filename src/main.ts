@@ -133,8 +133,6 @@ async function init(): Promise<void> {
     await refreshBalances();
   }
 
-  // Wire up events panel (user clicks Connect manually)
-  eventsPanel.setWallet(agentWallet);
 }
 
 function setStatus(msg: string): void {
@@ -174,6 +172,9 @@ async function runFullFlow(): Promise<void> {
       const agentCard = agentPanel.addStep(step, true);
       const providerCard = providerPanel.addStep(step, true);
       applyDelta(step);
+      if (step.variant === "webhook" && step.response) {
+        eventsPanel.pushEvent(step.response as Record<string, unknown>);
+      }
       await new Promise((r) => setTimeout(r, 600));
       agentPanel.deactivateCard(agentCard);
       providerPanel.deactivateCard(providerCard);
@@ -230,6 +231,9 @@ function advanceStep(): void {
   agentPanel.addStep(step);
   providerPanel.addStep(step);
   applyDelta(step);
+  if (step.variant === "webhook" && step.response) {
+    eventsPanel.pushEvent(step.response as Record<string, unknown>);
+  }
   stepBtn.textContent = stepIndex >= stepQueue.length ? "⏭ Done" : "⏭ Step";
 }
 
