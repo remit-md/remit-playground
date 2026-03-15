@@ -73,21 +73,3 @@ export async function getBalance(address: string, wallet: PlaygroundWallet): Pro
   return s.balance ?? "0.00";
 }
 
-/** Poll events with retries. Returns empty array after maxAttempts if still none. */
-export async function pollEvents(
-  wallet: PlaygroundWallet,
-  since: number,
-  limit = 10,
-  maxAttempts = 3,
-  delayMs = 500,
-): Promise<Record<string, unknown>[]> {
-  for (let i = 0; i < maxAttempts; i++) {
-    const events = await apiGet<Record<string, unknown>[]>(
-      `/events?since=${since}&limit=${limit}`,
-      wallet,
-    ).catch(() => []);
-    if (events.length > 0) return events;
-    if (i < maxAttempts - 1) await new Promise((r) => setTimeout(r, delayMs));
-  }
-  return [];
-}

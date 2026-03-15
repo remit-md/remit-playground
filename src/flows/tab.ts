@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { apiPost, apiGet, pollEvents } from "../api.js";
+import { apiPost, apiGet } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 
 const PER_UNIT = 0.5;
@@ -35,7 +35,6 @@ export const tabFlow: Flow = {
   description: "Open a tab, charge per API call, close to settle.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
-    const startTs = Math.floor(Date.now() / 1000);
     const expiry = Math.floor(Date.now() / 1000) + 3600;
     const tabReq = { provider: ctx.provider.address, limit_amount: LIMIT, per_unit: PER_UNIT, expiry };
     yield { label: "Agent → POST /tabs (open)", side: "agent", request: tabReq };
@@ -76,22 +75,26 @@ export const tabFlow: Flow = {
     );
     yield { label: "Tab closed — USDC settled on-chain", side: "both", response: closeTx, balanceDelta: { agent: -cumulative, provider: +(cumulative * 0.99).toFixed(2) } };
 
-    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
-    const events = await pollEvents(ctx.provider, startTs);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
-
-    if (events.length > 0) {
-      yield {
-        label: "What your registered endpoint would receive",
-        side: "both",
-        variant: "webhook",
-        response: {
-          event: (events[0] as Record<string, unknown>).type ?? "payment.completed",
-          payload: events[0],
-          delivered_to: "https://your-webhook.example.com",
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "both",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "tab.closed",
+        occurred_at: new Date().toISOString(),
+        resource_type: "tab",
+        resource_id: tab.id,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          tab_id: tab.id,
+          total_charged: cumulative,
+          total_charged_units: Math.round(cumulative * 1_000_000),
+          tx_hash: (closeTx as unknown as Record<string, unknown>)["tx_hash"] ?? "0x",
         },
-      };
-    }
+      },
+    };
 
     const finalTab = await apiGet<unknown>(`/tabs/${tab.id}`, ctx.agent);
     yield { label: "Tab final state", side: "both", response: finalTab };

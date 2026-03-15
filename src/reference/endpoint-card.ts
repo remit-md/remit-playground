@@ -12,6 +12,7 @@ import type { EndpointDef, HttpMethod } from "./categories.js";
 const METHOD_COLORS: Record<HttpMethod, string> = {
   GET: "bg-[#2ABFAB] text-white",
   POST: "bg-[#2ABFAB] text-white",
+  PATCH: "bg-orange-500 text-white",
   DELETE: "bg-red-600 text-white",
 };
 

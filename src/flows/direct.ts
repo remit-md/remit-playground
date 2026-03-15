@@ -1,4 +1,4 @@
-import { apiPost, apiGet, pollEvents } from "../api.js";
+import { apiPost } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 import { ethers } from "ethers";
 
@@ -8,7 +8,6 @@ export const directFlow: Flow = {
   description: "Instant USDC transfer with no escrow.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
-    const startTs = Math.floor(Date.now() / 1000);
     const nonce = ethers.hexlify(ethers.randomBytes(16));
 
     const req = { to: ctx.provider.address, amount: 1.0, task: "playground demo" };
@@ -29,8 +28,26 @@ export const directFlow: Flow = {
 
     yield { label: "Server → 201 Transaction confirmed", side: "agent", response: tx, balanceDelta: { agent: -1.0, provider: 0.99 } };
 
-    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
-    const events = await pollEvents(ctx.provider, startTs, 5);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "provider",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "payment.received",
+        occurred_at: new Date().toISOString(),
+        resource_type: "payment",
+        resource_id: tx.invoice_id ?? "unknown",
+        currency: "USDC",
+        testnet: true,
+        data: {
+          tx_hash: tx.tx_hash,
+          from: ctx.agent.address,
+          to: ctx.provider.address,
+          amount: 1.0,
+          amount_units: 1000000,
+        },
+      },
+    };
   },
 };

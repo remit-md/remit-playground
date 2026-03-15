@@ -6,7 +6,7 @@
 
 import type { PlaygroundWallet } from "../wallet.js";
 
-export type HttpMethod = "GET" | "POST" | "DELETE";
+export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
 export interface EndpointDef {
   method: HttpMethod;
@@ -278,14 +278,13 @@ export function buildCategories(): Category[] {
       ],
     },
     {
-      name: "Events",
+      name: "Events (SSE)",
       endpoints: [
         {
           method: "GET",
-          path: "/events",
-          description: "Poll events for authenticated wallet.",
-          tryable: true,
-          buildPath: () => "/events?limit=10",
+          path: "/events/stream",
+          description: "SSE stream — real-time events for authenticated wallet. Same payload as webhooks. Max 10 connections, auto-closes after 30 min. Use fetch + ReadableStream (EventSource doesn't support custom headers).",
+          tryable: false,
         },
       ],
     },
@@ -301,13 +300,19 @@ export function buildCategories(): Category[] {
         {
           method: "POST",
           path: "/webhooks",
-          description: "Register webhook — receive signed event POSTs.",
+          description: "Register webhook — receive signed event POSTs to your URL. Requires ≥1 event type.",
           tryable: true,
           buildRequest: () => ({
             url: "https://example.com/webhook",
-            events: [],
-            chains: [],
+            events: ["payment.received", "payment.sent"],
+            chains: ["base-sepolia"],
           }),
+        },
+        {
+          method: "PATCH",
+          path: "/webhooks/{id}",
+          description: "Update webhook — change URL, events, chains, or active status.",
+          tryable: false,
         },
         {
           method: "DELETE",

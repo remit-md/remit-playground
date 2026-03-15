@@ -1,4 +1,4 @@
-import { apiPost, apiGet, pollEvents } from "../api.js";
+import { apiPost, apiGet } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 import { ethers } from "ethers";
 
@@ -8,7 +8,6 @@ export const bountyFlow: Flow = {
   description: "Post a task, submit work, award payment.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
-    const startTs = Math.floor(Date.now() / 1000);
     const deadline = Math.floor(Date.now() / 1000) + 3600;
     const evidenceHash = ethers.keccak256(ethers.toUtf8Bytes("playground haiku submission"));
 
@@ -49,22 +48,27 @@ export const bountyFlow: Flow = {
     );
     yield { label: "Provider ← Bounty awarded", side: "both", response: awardTx, balanceDelta: { provider: 2.97 } };
 
-    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
-    const events = await pollEvents(ctx.provider, startTs);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
-
-    if (events.length > 0) {
-      yield {
-        label: "What your registered endpoint would receive",
-        side: "both",
-        variant: "webhook",
-        response: {
-          event: (events[0] as Record<string, unknown>).type ?? "payment.completed",
-          payload: events[0],
-          delivered_to: "https://your-webhook.example.com",
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "both",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "bounty.awarded",
+        occurred_at: new Date().toISOString(),
+        resource_type: "bounty",
+        resource_id: bounty.id,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          bounty_id: bounty.id,
+          winner: ctx.provider.address,
+          amount: 3.0,
+          amount_units: 3000000,
+          tx_hash: (awardTx as unknown as Record<string, unknown>)["tx_hash"] ?? "0x",
         },
-      };
-    }
+      },
+    };
 
     const finalBounty = await apiGet<unknown>(`/bounties/${bounty.id}`, ctx.agent);
     yield { label: "Bounty complete", side: "both", response: finalBounty };

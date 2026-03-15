@@ -1,4 +1,4 @@
-import { apiPost, apiGet, pollEvents } from "../api.js";
+import { apiPost, apiGet } from "../api.js";
 import type { Flow, StepResult, FlowContext } from "./types.js";
 
 export const depositFlow: Flow = {
@@ -7,7 +7,6 @@ export const depositFlow: Flow = {
   description: "Lock a deposit — returned or forfeited by provider.",
 
   async *run(ctx: FlowContext): AsyncGenerator<StepResult> {
-    const startTs = Math.floor(Date.now() / 1000);
     const expiry = Math.floor(Date.now() / 1000) + 3600;
 
     const depositReq = { provider: ctx.provider.address, amount: 1.5, expiry };
@@ -32,9 +31,27 @@ export const depositFlow: Flow = {
     );
     yield { label: "Deposit returned to agent", side: "both", response: returnTx, balanceDelta: { agent: 1.5 } };
 
-    yield { label: "Provider → GET /events (poll with retry)", side: "provider" };
-    const events = await pollEvents(ctx.provider, startTs);
-    yield { label: `Provider ← ${events.length} event(s)`, side: "provider", response: events[0] ?? { note: "no events after retries" } };
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "both",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "deposit.returned",
+        occurred_at: new Date().toISOString(),
+        resource_type: "deposit",
+        resource_id: deposit.id,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          deposit_id: deposit.id,
+          amount: 1.5,
+          amount_units: 1500000,
+          returned_to: ctx.agent.address,
+          tx_hash: (returnTx as unknown as Record<string, unknown>)["tx_hash"] ?? "0x",
+        },
+      },
+    };
 
     const finalDeposit = await apiGet<unknown>(`/deposits/${deposit.id}`, ctx.agent);
     yield { label: "Deposit final state", side: "both", response: finalDeposit };

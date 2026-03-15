@@ -10,6 +10,7 @@ import { ProviderPanel } from "./panels/provider.js";
 import { ALL_FLOWS } from "./flows/index.js";
 import type { Flow, StepResult, FlowContext } from "./flows/types.js";
 import { buildReferencePage } from "./reference/index.js";
+import { EventsPanel } from "./events-panel.js";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ let providerWallet: PlaygroundWallet;
 let activeFlow: Flow = ALL_FLOWS[0];
 let agentPanel: AgentPanel;
 let providerPanel: ProviderPanel;
+let eventsPanel: EventsPanel;
 let agentBalanceEl: HTMLElement;
 let providerBalanceEl: HTMLElement;
 let statusDotEl: HTMLElement;
@@ -130,6 +132,9 @@ async function init(): Promise<void> {
     clearStatus();
     await refreshBalances();
   }
+
+  // Pass wallets to events panel (it needs them for SSE auth)
+  eventsPanel.setWallet(agentWallet);
 }
 
 function setStatus(msg: string): void {
@@ -255,11 +260,13 @@ function buildLayout(root: HTMLElement): void {
   brand.appendChild(el("span", "text-sm text-[#6B6B6B]", "playground"));
   header.appendChild(brand);
 
-  // Section toggle: Flows | API Reference
+  // Section toggle: Flows | Events | API Reference
   const sectionToggle = el("div", "flex items-center gap-1 bg-[#F5F0EB] rounded-full p-0.5");
   const flowsTab = btn("Flows", "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors");
+  const eventsTab = btn("Events", "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors");
   const refTab = btn("API Reference", "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors");
   sectionToggle.appendChild(flowsTab);
+  sectionToggle.appendChild(eventsTab);
   sectionToggle.appendChild(refTab);
   header.appendChild(sectionToggle);
 
@@ -351,13 +358,13 @@ function buildLayout(root: HTMLElement): void {
   flowContainer.appendChild(walletBar);
 
   // Flow description bar
-  const WEBHOOK_FLOWS = new Set(["escrow", "bounty", "stream", "tab"]);
+  const WEBHOOK_FLOWS = new Set(["escrow", "bounty", "stream", "tab", "direct", "sse-events"]);
   const descEl = el("div", "px-4 py-1 text-xs text-[#6B6B6B] bg-[#FAFAF7] border-b border-[#E5E3DE] shrink-0");
   const descSpan = el("span", "");
   descSpan.textContent = activeFlow.description;
   descEl.appendChild(descSpan);
   const webhookHint = el("span", "italic text-[#8A8A8A]");
-  webhookHint.textContent = " \u00b7 Register a webhook via POST /webhooks to receive these events automatically.";
+  webhookHint.textContent = " · Open the Events tab to see live SSE events from this flow.";
   if (WEBHOOK_FLOWS.has(activeFlow.id)) descEl.appendChild(webhookHint);
   flowContainer.appendChild(descEl);
 
@@ -395,6 +402,11 @@ function buildLayout(root: HTMLElement): void {
   flowContainer.appendChild(footer);
   root.appendChild(flowContainer);
 
+  // ── Events container
+  const eventsContainer = el("div", "hidden flex-1 min-h-0");
+  eventsPanel = new EventsPanel(eventsContainer);
+  root.appendChild(eventsContainer);
+
   // ── API Reference container (hidden by default)
   const refContainer = el("div", "hidden flex-1 min-h-0 bg-[#FAFAF7]");
   let refBuilt = false;
@@ -404,17 +416,36 @@ function buildLayout(root: HTMLElement): void {
   function showFlows(): void {
     flowContainer.classList.remove("hidden");
     flowContainer.classList.add("flex", "flex-col");
+    eventsContainer.classList.add("hidden");
+    eventsContainer.classList.remove("flex", "flex-col");
     refContainer.classList.add("hidden");
     flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors";
+    eventsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
     refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
+  }
+
+  function showEvents(): void {
+    flowContainer.classList.add("hidden");
+    flowContainer.classList.remove("flex", "flex-col");
+    eventsContainer.classList.remove("hidden");
+    eventsContainer.classList.add("flex", "flex-col");
+    refContainer.classList.add("hidden");
+    eventsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors";
+    flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
+    refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
+    // Pass wallet on first show (may still be loading during buildLayout)
+    if (agentWallet) eventsPanel.setWallet(agentWallet);
   }
 
   function showReference(): void {
     flowContainer.classList.add("hidden");
     flowContainer.classList.remove("flex", "flex-col");
+    eventsContainer.classList.add("hidden");
+    eventsContainer.classList.remove("flex", "flex-col");
     refContainer.classList.remove("hidden");
     refTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-[#2ABFAB] text-white transition-colors";
     flowsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
+    eventsTab.className = "px-3 py-1 rounded-full text-xs font-medium bg-transparent text-[#6B6B6B] hover:text-black transition-colors";
     // Lazy-build the reference page on first view
     if (!refBuilt) {
       buildReferencePage(refContainer, agentWallet, providerWallet);
@@ -423,6 +454,7 @@ function buildLayout(root: HTMLElement): void {
   }
 
   flowsTab.addEventListener("click", showFlows);
+  eventsTab.addEventListener("click", showEvents);
   refTab.addEventListener("click", showReference);
 }
 
