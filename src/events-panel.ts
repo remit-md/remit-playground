@@ -49,7 +49,8 @@ export class EventsPanel {
 
   private build(): void {
     this.container.innerHTML = "";
-    this.container.className = "flex flex-col flex-1 min-h-0";
+    // Add layout classes without clobbering visibility classes set by parent
+    this.container.classList.add("flex", "flex-col");
 
     // ── Header
     const header = document.createElement("div");
