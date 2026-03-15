@@ -8,7 +8,7 @@
  *   1. Discover agent card (get A2A endpoint)
  *   2. Build an AP2 IntentMandate
  *   3. Sign + submit JSON-RPC message/send to POST /a2a
- *   4. Poll task state with tasks/get
+ *   4. Check task state with tasks/get
  */
 
 import { signRequest } from "../wallet.js";
@@ -190,7 +190,7 @@ export const ap2PaymentFlow: Flow = {
       return;
     }
 
-    // ── Step 5: Poll task state with tasks/get ────────────────────────────────
+    // ── Step 5: Check task state with tasks/get ────────────────────────────────
     yield {
       label: "Agent → tasks/get (verify task persisted in Redis)",
       side: "agent",

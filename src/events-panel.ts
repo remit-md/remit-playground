@@ -1,8 +1,10 @@
 /**
  * Live Events panel — connects to GET /api/v0/events/stream (SSE via fetch)
- * and renders incoming events in real time, grouped by category.
+ * and renders incoming events in real time, colour-coded by category.
  *
- * EventSource does not support custom headers, so we use fetch + ReadableStream.
+ * Designed to sit at the bottom of the flows view as a compact, always-visible
+ * panel.  EventSource does not support custom headers, so we use fetch +
+ * ReadableStream.
  */
 
 import { renderJsonViewer } from "./json-viewer.js";
@@ -49,15 +51,14 @@ export class EventsPanel {
 
   private build(): void {
     this.container.innerHTML = "";
-    // Add layout classes without clobbering visibility classes set by parent
     this.container.classList.add("flex", "flex-col");
 
-    // ── Header
+    // ── Compact header
     const header = document.createElement("div");
-    header.className = "flex items-center justify-between px-4 py-2 bg-white border-b border-[#E5E3DE] shrink-0";
+    header.className = "flex items-center justify-between px-3 py-1.5 bg-white border-b border-[#E5E3DE] shrink-0";
 
     const left = document.createElement("div");
-    left.className = "flex items-center gap-3";
+    left.className = "flex items-center gap-2";
 
     const title = document.createElement("span");
     title.className = "text-xs font-semibold text-[#2ABFAB] uppercase tracking-wider";
@@ -65,31 +66,31 @@ export class EventsPanel {
     left.appendChild(title);
 
     this.statusDot = document.createElement("span");
-    this.statusDot.className = "w-2 h-2 rounded-full bg-[#D4D2CC]";
+    this.statusDot.className = "w-1.5 h-1.5 rounded-full bg-[#D4D2CC]";
     left.appendChild(this.statusDot);
 
     this.statusText = document.createElement("span");
-    this.statusText.className = "text-xs text-[#6B6B6B]";
+    this.statusText.className = "text-[10px] text-[#6B6B6B]";
     this.statusText.textContent = "disconnected";
     left.appendChild(this.statusText);
 
     this.countEl = document.createElement("span");
-    this.countEl.className = "text-xs text-[#8A8A8A]";
+    this.countEl.className = "text-[10px] text-[#8A8A8A]";
     left.appendChild(this.countEl);
 
     header.appendChild(left);
 
     const right = document.createElement("div");
-    right.className = "flex items-center gap-2";
+    right.className = "flex items-center gap-1";
 
     const clearBtn = document.createElement("button");
-    clearBtn.className = "px-2 py-1 rounded text-xs text-[#6B6B6B] hover:text-black hover:bg-[#F5F0EB] transition-colors";
+    clearBtn.className = "px-1.5 py-0.5 rounded text-[10px] text-[#6B6B6B] hover:text-black hover:bg-[#F5F0EB] transition-colors";
     clearBtn.textContent = "Clear";
     clearBtn.addEventListener("click", () => this.clear());
     right.appendChild(clearBtn);
 
     this.connectBtn = document.createElement("button");
-    this.connectBtn.className = "px-3 py-1 rounded text-xs font-medium bg-[#2ABFAB] text-white hover:bg-[#24A896] transition-colors";
+    this.connectBtn.className = "px-2 py-0.5 rounded text-[10px] font-medium bg-[#2ABFAB] text-white hover:bg-[#24A896] transition-colors";
     this.connectBtn.textContent = "Connect";
     this.connectBtn.addEventListener("click", () => this.toggle());
     right.appendChild(this.connectBtn);
@@ -97,27 +98,9 @@ export class EventsPanel {
     header.appendChild(right);
     this.container.appendChild(header);
 
-    // ── Description bar
-    const desc = document.createElement("div");
-    desc.className = "px-4 py-1.5 text-xs text-[#6B6B6B] bg-[#FAFAF7] border-b border-[#E5E3DE] shrink-0";
-    desc.textContent = "SSE stream delivers the same payload as webhooks — no polling, no webhook URL needed. Run any flow to see its events appear here.";
-    this.container.appendChild(desc);
-
-    // ── Category legend
-    const legend = document.createElement("div");
-    legend.className = "flex items-center gap-2 px-4 py-1.5 bg-[#FAFAF7] border-b border-[#E5E3DE] shrink-0 overflow-x-auto";
-    for (const [cat, colour] of Object.entries(CATEGORY_COLOURS)) {
-      const chip = document.createElement("span");
-      chip.className = "text-xs px-2 py-0.5 rounded-full text-white shrink-0";
-      chip.style.backgroundColor = colour;
-      chip.textContent = cat;
-      legend.appendChild(chip);
-    }
-    this.container.appendChild(legend);
-
     // ── Event list
     this.listEl = document.createElement("div");
-    this.listEl.className = "flex-1 overflow-y-auto p-4 space-y-2";
+    this.listEl.className = "flex-1 overflow-y-auto px-3 py-2 space-y-1.5";
 
     this.appendPlaceholder();
     this.container.appendChild(this.listEl);
@@ -138,10 +121,10 @@ export class EventsPanel {
       connecting: "connecting…",
       connected: "connected",
       disconnected: "disconnected",
-      error: "error — click to retry",
+      error: "error — retry",
     };
     this.statusDot.style.backgroundColor = colours[state] ?? "#D4D2CC";
-    this.statusDot.className = `w-2 h-2 rounded-full${state === "connecting" ? " pulse" : ""}`;
+    this.statusDot.className = `w-1.5 h-1.5 rounded-full${state === "connecting" ? " pulse" : ""}`;
     this.statusText.textContent = labels[state] ?? state;
     this.connectBtn.textContent =
       state === "connected" || state === "connecting" ? "Disconnect" : "Connect";
@@ -158,7 +141,18 @@ export class EventsPanel {
   async connect(): Promise<void> {
     if (!this.wallet || this.abort) return;
     this.setStatus("connecting");
+    this.removePlaceholder();
     this.abort = new AbortController();
+
+    // 10-second timeout for initial connection (server may never respond)
+    const timeout = setTimeout(() => {
+      if (this.abort && this.statusText.textContent === "connecting…") {
+        this.abort.abort();
+        this.abort = null;
+        this.setStatus("error");
+        this.addSystemMessage("Connection timed out — server may be unreachable.");
+      }
+    }, 10_000);
 
     try {
       const authHeaders = await signRequest(this.wallet, "GET", "/api/v0/events/stream");
@@ -166,6 +160,8 @@ export class EventsPanel {
         headers: authHeaders,
         signal: this.abort.signal,
       });
+
+      clearTimeout(timeout);
 
       if (!res.ok || !res.body) {
         this.setStatus("error");
@@ -176,7 +172,7 @@ export class EventsPanel {
 
       this.setStatus("connected");
       this.removePlaceholder();
-      this.addSystemMessage("SSE stream connected — events will appear as they arrive.");
+      this.addSystemMessage("SSE stream connected — run any flow to see events.");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -202,8 +198,9 @@ export class EventsPanel {
         }
       }
     } catch (err: unknown) {
+      clearTimeout(timeout);
       if (err instanceof Error && err.name === "AbortError") {
-        // user-initiated disconnect — no error shown
+        // user-initiated disconnect or timeout — no extra error
       } else {
         this.setStatus("error");
         this.addSystemMessage(`Stream error: ${err instanceof Error ? err.message : String(err)}`);
@@ -212,7 +209,7 @@ export class EventsPanel {
       }
     }
 
-    if (this.statusText.textContent !== "error — click to retry") {
+    if (this.statusText.textContent !== "error — retry") {
       this.setStatus("disconnected");
     }
     this.abort = null;
@@ -232,22 +229,22 @@ export class EventsPanel {
     const colour = colourOf(eventType);
     const ts = String(event["occurred_at"] ?? new Date().toISOString())
       .replace("T", " ")
-      .slice(0, 19);
+      .slice(11, 19); // just HH:MM:SS for compactness
 
     const card = document.createElement("div");
-    card.className = "step-enter rounded-lg border border-[#E5E3DE] bg-white p-3";
+    card.className = "step-enter rounded border border-[#E5E3DE] bg-white px-2.5 py-1.5";
 
     const topRow = document.createElement("div");
-    topRow.className = "flex items-center justify-between mb-1";
+    topRow.className = "flex items-center justify-between mb-0.5";
 
     const badge = document.createElement("span");
-    badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full text-white";
+    badge.className = "text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white";
     badge.style.backgroundColor = colour;
     badge.textContent = eventType;
     topRow.appendChild(badge);
 
     const time = document.createElement("span");
-    time.className = "text-xs text-[#8A8A8A] font-mono";
+    time.className = "text-[10px] text-[#8A8A8A] font-mono";
     time.textContent = ts;
     topRow.appendChild(time);
 
@@ -260,7 +257,7 @@ export class EventsPanel {
 
   private addSystemMessage(msg: string): void {
     const row = document.createElement("div");
-    row.className = "text-xs text-[#8A8A8A] italic px-1 py-0.5";
+    row.className = "text-[10px] text-[#8A8A8A] italic px-1 py-0.5";
     row.textContent = msg;
     this.listEl.insertBefore(row, this.listEl.firstChild);
   }
@@ -268,17 +265,8 @@ export class EventsPanel {
   private appendPlaceholder(): void {
     const placeholder = document.createElement("div");
     placeholder.id = "events-placeholder";
-    placeholder.className = "text-sm text-[#8A8A8A] text-center mt-16 space-y-2";
-
-    const line1 = document.createElement("div");
-    line1.textContent = "No events yet.";
-    placeholder.appendChild(line1);
-
-    const line2 = document.createElement("div");
-    line2.className = "text-xs";
-    line2.textContent = "Click Connect to subscribe to the SSE stream, then run any flow to see events.";
-    placeholder.appendChild(line2);
-
+    placeholder.className = "text-[11px] text-[#8A8A8A] text-center py-4";
+    placeholder.textContent = "Run a flow to see live events.";
     this.listEl.appendChild(placeholder);
   }
 
@@ -293,7 +281,7 @@ export class EventsPanel {
     if (!this.abort) {
       this.appendPlaceholder();
     } else {
-      this.addSystemMessage("SSE stream connected — events will appear as they arrive.");
+      this.addSystemMessage("SSE stream connected — run any flow to see events.");
     }
   }
 }
