@@ -130,6 +130,29 @@ export const x402Flow: Flow = {
     if (settleRes.ok) {
       yield { label: "Server ← Settlement confirmed on-chain", side: "both", response: settleParsed, balanceDelta: { agent: -0.01, provider: 0.01 } };
       yield { label: "Agent → retries with PAYMENT-SIGNATURE → 200 ✓", side: "agent", response: { status: 200, data: "Resource served" } };
+
+      yield {
+        label: "Webhook delivered → POST https://your-webhook.example.com",
+        side: "provider",
+        variant: "webhook",
+        response: {
+          id: "evt_" + Math.random().toString(36).slice(2, 10),
+          event: "payment.received",
+          occurred_at: new Date().toISOString(),
+          resource_type: "payment",
+          resource_id: (settleParsed as Record<string, unknown>)["invoice_id"] as string ?? eip3009Nonce.slice(0, 18),
+          currency: "USDC",
+          testnet: true,
+          data: {
+            protocol: "x402",
+            from: ctx.agent.address,
+            to: ctx.provider.address,
+            amount: 0.01,
+            amount_units: 10000,
+            tx_hash: (settleParsed as Record<string, unknown>)["tx_hash"] as string ?? "0x",
+          },
+        },
+      };
     } else {
       yield {
         label: "Settlement signed (on-chain confirmation pending)",

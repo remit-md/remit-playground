@@ -30,6 +30,28 @@ export const directFlow: Flow = {
 
     yield {
       label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "agent",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "payment.sent",
+        occurred_at: new Date().toISOString(),
+        resource_type: "payment",
+        resource_id: tx.invoice_id ?? "unknown",
+        currency: "USDC",
+        testnet: true,
+        data: {
+          tx_hash: tx.tx_hash,
+          from: ctx.agent.address,
+          to: ctx.provider.address,
+          amount: 1.0,
+          amount_units: 1000000,
+        },
+      },
+    };
+
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
       side: "provider",
       variant: "webhook",
       response: {

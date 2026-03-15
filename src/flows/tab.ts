@@ -46,6 +46,28 @@ export const tabFlow: Flow = {
     );
     yield { label: "Tab opened", side: "both", response: tab };
 
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "both",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "tab.opened",
+        occurred_at: new Date().toISOString(),
+        resource_type: "tab",
+        resource_id: tab.id,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          tab_id: tab.id,
+          limit_amount: LIMIT,
+          limit_amount_units: Math.round(LIMIT * 1_000_000),
+          per_unit: PER_UNIT,
+          per_unit_units: Math.round(PER_UNIT * 1_000_000),
+        },
+      },
+    };
+
     let cumulative = 0;
     let callCount = 0;
     for (let i = 1; i <= 2; i++) {
@@ -55,6 +77,29 @@ export const tabFlow: Flow = {
       yield { label: `Provider → POST /tabs/:id/charge (call ${i})`, side: "provider", request: chargeReq };
       const chargeRes = await apiPost<unknown>(`/tabs/${tab.id}/charge`, chargeReq, ctx.provider);
       yield { label: `Charge ${i} accepted`, side: "provider", response: chargeRes };
+
+      yield {
+        label: "Webhook delivered → POST https://your-webhook.example.com",
+        side: "agent",
+        variant: "webhook",
+        response: {
+          id: "evt_" + Math.random().toString(36).slice(2, 10),
+          event: "tab.charged",
+          occurred_at: new Date().toISOString(),
+          resource_type: "tab",
+          resource_id: tab.id,
+          currency: "USDC",
+          testnet: true,
+          data: {
+            tab_id: tab.id,
+            amount: PER_UNIT,
+            amount_units: Math.round(PER_UNIT * 1_000_000),
+            cumulative,
+            cumulative_units: Math.round(cumulative * 1_000_000),
+            call_count: callCount,
+          },
+        },
+      };
     }
 
     // Provider signs the final cumulative state (EIP-712 TabCharge).

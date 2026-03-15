@@ -40,6 +40,26 @@ export const escrowFlow: Flow = {
     const escrow = await apiPost<{ id: string; status: string }>("/escrows", { invoice_id: invoiceId }, ctx.agent);
     yield { label: "Agent ← Escrow funded on-chain", side: "agent", response: escrow, balanceDelta: { agent: -2.0 } };
 
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "both",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "escrow.funded",
+        occurred_at: new Date().toISOString(),
+        resource_type: "escrow",
+        resource_id: invoiceId,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          invoice_id: invoiceId,
+          amount: 2.0,
+          amount_units: 2000000,
+        },
+      },
+    };
+
     // Step 3: Provider claims start
     yield { label: "Provider → POST /escrows/:id/claim-start", side: "provider" };
     const claimTx = await apiPost<{ tx_hash: string }>(`/escrows/${invoiceId}/claim-start`, {}, ctx.provider);

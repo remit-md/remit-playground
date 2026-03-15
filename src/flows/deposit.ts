@@ -19,6 +19,28 @@ export const depositFlow: Flow = {
     );
     yield { label: "Deposit locked on-chain", side: "both", response: deposit, balanceDelta: { agent: -1.5 } };
 
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "both",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "deposit.created",
+        occurred_at: new Date().toISOString(),
+        resource_type: "deposit",
+        resource_id: deposit.id,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          deposit_id: deposit.id,
+          amount: 1.5,
+          amount_units: 1500000,
+          provider: ctx.provider.address,
+          expiry,
+        },
+      },
+    };
+
     yield { label: "Provider reviews deposit", side: "provider" };
     const fetched = await apiGet<unknown>(`/deposits/${deposit.id}`, ctx.provider);
     yield { label: "Provider sees locked deposit", side: "provider", response: fetched };

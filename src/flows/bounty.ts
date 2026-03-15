@@ -28,6 +28,28 @@ export const bountyFlow: Flow = {
     );
     yield { label: "Bounty posted — USDC locked", side: "both", response: bounty, balanceDelta: { agent: -3.0 } };
 
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "agent",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "bounty.posted",
+        occurred_at: new Date().toISOString(),
+        resource_type: "bounty",
+        resource_id: bounty.id,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          bounty_id: bounty.id,
+          amount: 3.0,
+          amount_units: 3000000,
+          task_description: "Write a haiku about USDC",
+          deadline,
+        },
+      },
+    };
+
     // Step 2: Provider submits evidence
     const submitReq = { evidence_hash: evidenceHash };
     yield { label: "Provider → POST /bounties/:id/submit", side: "provider", request: submitReq };

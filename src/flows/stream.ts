@@ -21,6 +21,27 @@ export const streamFlow: Flow = {
     );
     yield { label: `Stream opened @ $${RATE}/sec`, side: "both", response: stream, balanceDelta: { agent: -MAX_TOTAL } };
 
+    yield {
+      label: "Webhook delivered → POST https://your-webhook.example.com",
+      side: "both",
+      variant: "webhook",
+      response: {
+        id: "evt_" + Math.random().toString(36).slice(2, 10),
+        event: "stream.opened",
+        occurred_at: new Date().toISOString(),
+        resource_type: "stream",
+        resource_id: stream.id,
+        currency: "USDC",
+        testnet: true,
+        data: {
+          stream_id: stream.id,
+          rate_per_second: RATE,
+          max_total: MAX_TOTAL,
+          max_total_units: Math.round(MAX_TOTAL * 1_000_000),
+        },
+      },
+    };
+
     yield { label: "⏱ Funds accruing… (3s simulated)", side: "both" };
     await new Promise((r) => setTimeout(r, 3000));
 
