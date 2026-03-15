@@ -80,7 +80,7 @@ export class EventsPanel {
   }
 
   /** Push a webhook event payload from a flow step. */
-  pushEvent(event: Record<string, unknown>): void {
+  pushEvent(event: Record<string, unknown>, recipient: "agent" | "provider"): void {
     this.removePlaceholder();
     this.count++;
     this.countEl.textContent = `(${this.count})`;
@@ -95,7 +95,14 @@ export class EventsPanel {
     card.className = "step-enter rounded border border-[#E5E3DE] bg-white px-2.5 py-1.5";
 
     const topRow = document.createElement("div");
-    topRow.className = "flex items-center justify-between mb-0.5";
+    topRow.className = "flex items-center gap-1.5 mb-0.5";
+
+    // Recipient badge: AGENT (teal) or PROVIDER (indigo)
+    const recipientBadge = document.createElement("span");
+    recipientBadge.className = "text-[9px] font-bold px-1.5 py-0.5 rounded text-white uppercase tracking-wide shrink-0";
+    recipientBadge.style.backgroundColor = recipient === "agent" ? "#2ABFAB" : "#6366F1";
+    recipientBadge.textContent = recipient === "agent" ? "AGENT" : "PROVIDER";
+    topRow.appendChild(recipientBadge);
 
     const badge = document.createElement("span");
     badge.className = "text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white";
@@ -104,7 +111,7 @@ export class EventsPanel {
     topRow.appendChild(badge);
 
     const time = document.createElement("span");
-    time.className = "text-[10px] text-[#8A8A8A] font-mono";
+    time.className = "text-[10px] text-[#8A8A8A] font-mono ml-auto";
     time.textContent = ts;
     topRow.appendChild(time);
 

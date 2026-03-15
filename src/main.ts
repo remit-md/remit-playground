@@ -173,7 +173,13 @@ async function runFullFlow(): Promise<void> {
       const providerCard = providerPanel.addStep(step, true);
       applyDelta(step);
       if (step.variant === "webhook" && step.response) {
-        eventsPanel.pushEvent(step.response as Record<string, unknown>);
+        const payload = step.response as Record<string, unknown>;
+        if (step.side === "both") {
+          eventsPanel.pushEvent(payload, "agent");
+          eventsPanel.pushEvent(payload, "provider");
+        } else {
+          eventsPanel.pushEvent(payload, step.side);
+        }
       }
       await new Promise((r) => setTimeout(r, 600));
       agentPanel.deactivateCard(agentCard);
@@ -232,7 +238,13 @@ function advanceStep(): void {
   providerPanel.addStep(step);
   applyDelta(step);
   if (step.variant === "webhook" && step.response) {
-    eventsPanel.pushEvent(step.response as Record<string, unknown>);
+    const payload = step.response as Record<string, unknown>;
+    if (step.side === "both") {
+      eventsPanel.pushEvent(payload, "agent");
+      eventsPanel.pushEvent(payload, "provider");
+    } else {
+      eventsPanel.pushEvent(payload, step.side);
+    }
   }
   stepBtn.textContent = stepIndex >= stepQueue.length ? "⏭ Done" : "⏭ Step";
 }
